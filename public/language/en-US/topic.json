@@ -232,5 +232,6 @@
     "announcers": "Shares",
     "announcers-x": "Shares (%1)",
     "endorse": "Endorse",
-    "unendorse": "Unendorse"
+    "unendorse": "Unendorse",
+    "endorsed": "Endorsed"
 }

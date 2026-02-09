@@ -93,11 +93,16 @@
 		</a>
 	</li>
 
+	{{{ end }}}
+
+	{{{ if posts.display_moderator_tools }}}
 	<li>
-		<a class="dropdown-item rounded-1 d-flex align-items-center gap-2" component="post/endorse" role="menuitem" href="#">
+		<a class="dropdown-item rounded-1 d-flex align-items-center gap-2" component="post/endorse" role="menuitem" href="#" data-endorsed="{posts.endorsed}">
 			<span class="menu-icon">
-				<i component="post/endorse" class="fa fa-fw text-secondary fa-bookmark "></i>
-			</span> [[topic:endorse]]
+				<i component="post/endorse/on" class="fa fa-fw text-secondary fa-check-circle {{{ if !posts.endorsed }}}hidden{{{ end }}}"></i>
+				<i component="post/endorse/off" class="fa fa-fw text-secondary fa-check-circle-o {{{ if posts.endorsed }}}hidden{{{ end }}}"></i>
+			</span>
+			<span component="post/endorse/text">{{{ if posts.endorsed }}}[[topic:unendorse]]{{{ else }}}[[topic:endorse]]{{{ end }}}</span>
 		</a>
 	</li>
 	{{{ end }}}
