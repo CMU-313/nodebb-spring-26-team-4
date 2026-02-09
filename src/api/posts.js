@@ -473,6 +473,30 @@ postsAPI.unbookmark = async function (caller, data) {
 	return await apiHelpers.postCommand(caller, 'unbookmark', 'bookmarked', '', data);
 };
 
+postsAPI.endorse = async function (caller, data) {
+	if (!data || !data.pid) {
+		throw new Error('[[error:invalid-data]]');
+	}
+	const exists = await posts.exists(data.pid);
+	if (!exists) {
+		throw new Error('[[error:invalid-pid]]');
+	}
+	await posts.setPostField(data.pid, 'endorsed', 1);
+	return { pid: data.pid, endorsed: 1 };
+};
+
+postsAPI.unendorse = async function (caller, data) {
+	if (!data || !data.pid) {
+		throw new Error('[[error:invalid-data]]');
+	}
+	const exists = await posts.exists(data.pid);
+	if (!exists) {
+		throw new Error('[[error:invalid-pid]]');
+	}
+	await posts.setPostField(data.pid, 'endorsed', 0);
+	return { pid: data.pid, endorsed: 0 };
+};
+
 async function diffsPrivilegeCheck(pid, uid) {
 	const [deleted, privilegesData] = await Promise.all([
 		posts.getPostField(pid, 'deleted'),
