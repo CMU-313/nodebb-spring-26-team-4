@@ -230,5 +230,7 @@
     "unread-posts-link": "Unread posts link",
     "thumb-image": "Topic thumbnail image",
     "announcers": "Shares",
-    "announcers-x": "Shares (%1)"
+    "announcers-x": "Shares (%1)",
+    "endorse": "Endorse",
+    "unendorse": "Unendorse"
 }

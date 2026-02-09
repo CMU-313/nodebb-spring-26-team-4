@@ -289,6 +289,16 @@ define('forum/topic/postTools', [
 		postContainer.on('click', '[component="post/chat"]', function () {
 			openChat($(this));
 		});
+
+		console.log('post tools initialized');
+		console.log('post privileges', ajaxify.data.privileges);
+
+		//if (ajaxify.data.privileges['posts:endorse']) {
+		postContainer.on('click', '[component="post/endorse"]', function () {
+			toggleEndorse($(this));
+			console.log('endorsing post');
+		});
+		//}
 	}
 
 	async function onReplyClicked(button, tid) {
@@ -429,6 +439,14 @@ define('forum/topic/postTools', [
 
 	function purgePost(button) {
 		postAction('purge', getData(button, 'data-pid'));
+	}
+
+	async function toggleEndorse(button) {
+		const pid = getData(button, 'data-pid');
+		const postEl = components.get('post', 'pid', pid);
+		var action = !postEl.hasClass('endorsed') ? 'put' : 'del';
+		console.log('toggling endorse', action, pid);
+		api[action](`/posts/${encodeURIComponent(pid)}/endorse`).catch(alerts.error);
 	}
 
 	async function postAction(action, pid) {
