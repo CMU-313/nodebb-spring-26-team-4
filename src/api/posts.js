@@ -477,9 +477,8 @@ postsAPI.endorse = async function (caller, data) {
 	if (!data || !data.pid) {
 		throw new Error('[[error:invalid-data]]');
 	}
-	const cid = await posts.getCidByPid(data.pid);
-	const isAdminOrMod = await privileges.categories.isAdminOrMod(cid, caller.uid);
-	if (!isAdminOrMod) {
+	const canEndorse = await privileges.posts.can('posts:endorse', data.pid, caller.uid);
+	if (!canEndorse) {
 		throw new Error('[[error:no-privileges]]');
 	}
 	const exists = await posts.exists(data.pid);
@@ -496,9 +495,8 @@ postsAPI.unendorse = async function (caller, data) {
 	if (!data || !data.pid) {
 		throw new Error('[[error:invalid-data]]');
 	}
-	const cid = await posts.getCidByPid(data.pid);
-	const isAdminOrMod = await privileges.categories.isAdminOrMod(cid, caller.uid);
-	if (!isAdminOrMod) {
+	const canEndorse = await privileges.posts.can('posts:endorse', data.pid, caller.uid);
+	if (!canEndorse) {
 		throw new Error('[[error:no-privileges]]');
 	}
 	const exists = await posts.exists(data.pid);
