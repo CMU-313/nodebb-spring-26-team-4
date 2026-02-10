@@ -290,15 +290,9 @@ define('forum/topic/postTools', [
 			openChat($(this));
 		});
 
-		console.log('post tools initialized');
-		console.log('post privileges', ajaxify.data.privileges);
-
-		//if (ajaxify.data.privileges['posts:endorse']) {
 		postContainer.on('click', '[component="post/endorse"]', function () {
 			toggleEndorse($(this));
-			console.log('endorsing post');
 		});
-		//}
 	}
 
 	async function onReplyClicked(button, tid) {
@@ -443,10 +437,10 @@ define('forum/topic/postTools', [
 
 	async function toggleEndorse(button) {
 		const pid = getData(button, 'data-pid');
-		const postEl = components.get('post', 'pid', pid);
-		var action = !postEl.hasClass('endorsed') ? 'put' : 'del';
-		console.log('toggling endorse', action, pid);
-		api[action](`/posts/${encodeURIComponent(pid)}/endorse`).catch(alerts.error);
+		const endorseBtn = button.closest('[component="post/endorse"]');
+		const isEndorsed = endorseBtn.attr('data-endorsed') === '1';
+		const method = isEndorsed ? 'del' : 'put';
+		api[method](`/posts/${encodeURIComponent(pid)}/endorse`).catch(alerts.error);
 	}
 
 	async function postAction(action, pid) {
