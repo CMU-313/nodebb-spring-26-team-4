@@ -106,6 +106,7 @@
 							<th><input component="user/select/all" type="checkbox"/></th>
 							<th class="text-end text-muted">[[admin/manage/users:users.uid]]</th>
 							<th class="text-muted">[[admin/manage/users:users.username]]</th>
+							<th class="text-muted">[[admin/manage/users:users.groups]]</th>
 							<th class="text-muted">[[admin/manage/users:users.email]]</th>
 							<th class="text-muted">[[admin/manage/users:users.ip]]</th>
 							<th data-sort="postcount" class="text-end pointer text-nowrap">[[admin/manage/users:users.postcount]] {{{if sort_postcount}}}<i class="fa fa-sort-{{{if reverse}}}down{{{else}}}up{{{end}}}">{{{end}}}</th>
@@ -124,6 +125,17 @@
 								<i title="[[admin/manage/users:users.banned]]" class="ban fa fa-gavel text-danger{{{ if !users.banned }}} hidden{{{ end }}}"></i>
 								<i class="administrator fa fa-shield text-success{{{ if !users.administrator }}} hidden{{{ end }}}"></i>
 								<a href="{config.relative_path}/user/{users.userslug}"> {users.username}</a>
+							</td>
+							<td>
+								{{{ if users.groups.length }}}
+								<div class="d-flex flex-wrap gap-1">
+									{{{ each users.groups }}}
+									<span class="badge text-bg-light border">{users.groups.displayName}</span>
+									{{{ end }}}
+								</div>
+								{{{ else }}}
+								<span class="text-muted">—</span>
+								{{{ end }}}
 							</td>
 							<td class="text-nowrap">
 								<div class="d-flex flex-column gap-1">
