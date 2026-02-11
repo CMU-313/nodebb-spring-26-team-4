@@ -69,7 +69,6 @@ module.exports = function (Categories) {
 		];
 		const modPrivileges = defaultPrivileges.concat([
 			'groups:topics:schedule',
-			'groups:posts:endorse',
 			'groups:posts:view_deleted',
 			'groups:purge',
 		]);
