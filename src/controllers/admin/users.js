@@ -5,6 +5,7 @@ const validator = require('validator');
 const user = require('../../user');
 const meta = require('../../meta');
 const db = require('../../database');
+const groups = require('../../groups');
 const pagination = require('../../pagination');
 const events = require('../../events');
 const plugins = require('../../plugins');
@@ -178,12 +179,13 @@ async function loadUserInfo(callerUid, uids) {
 		return uids.map((uid, index) => confirmObjs[index]);
 	}
 
-	const [isAdmin, userData, lastonline, confirmObjs, ips] = await Promise.all([
+	const [isAdmin, userData, lastonline, confirmObjs, ips, userGroups] = await Promise.all([
 		user.isAdministrator(uids),
 		user.getUsersWithFields(uids, userFields, callerUid),
 		db.sortedSetScores('users:online', uids),
 		getConfirmObjs(),
 		getIPs(),
+		groups.getUserGroups(uids),
 	]);
 	userData.forEach((user, index) => {
 		if (user) {
@@ -201,6 +203,7 @@ async function loadUserInfo(callerUid, uids) {
 				user['email:pending'] = confirmObj.expires && Date.now() < confirmObj.expires;
 				user.emailToConfirm = validator.escape(String(confirmObj.email));
 			}
+			user.groups = (userGroups[index] || []).filter(group => group && group.name !== 'registered-users');
 		}
 	});
 	return userData;
