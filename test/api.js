@@ -185,6 +185,7 @@ describe('API', async () => {
 		}
 
 		// Create sample users
+		//flakey test
 		const adminUid = await user.create({ username: 'admin', password: '123456' });
 		const unprivUid = await user.create({ username: 'unpriv', password: '123456' });
 		// flakey test
@@ -530,6 +531,7 @@ describe('API', async () => {
 					}
 				});
 
+				
 				//flakey test
 				it.skip('response status code should match one of the schema defined responses', () => {
 					// HACK: allow HTTP 418 I am a teapot, for now   👇
@@ -540,7 +542,8 @@ describe('API', async () => {
 						`${method.toUpperCase()} ${path} sent back unexpected HTTP status code: ${result.response.statusCode}`
 					);
 				});
-
+				
+				//flakey test
 				// Recursively iterate through schema properties, comparing type
 				//flakey test
 				it.skip('response body should match schema definition', () => {
