@@ -83,7 +83,9 @@
 		<div class="content text-break" component="post/content" itemprop="text">
 			{posts.content}
 		</div>
-
+		<div>
+			<span component="post/endorsed-indicator" class="endorsed-indicator {{{ if !posts.endorsed }}}opacity-0{{{ end }}} text-success"> This post is endorsed by an instructor</span>
+		</div>
 		<div component="post/footer" class="post-footer border-bottom pb-2">
 			{{{ if posts.user.signature }}}
 			<div component="post/signature" data-uid="{posts.user.uid}" class="text-xs text-muted mt-2">{posts.user.signature}</div>
