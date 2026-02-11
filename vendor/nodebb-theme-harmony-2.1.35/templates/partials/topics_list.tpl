@@ -24,6 +24,13 @@
 					<a class="text-reset" href="{{{ if topics.noAnchor }}}#{{{ else }}}{config.relative_path}/topic/{./slug}{{{ if ./bookmark }}}/{./bookmark}{{{ end }}}{{{ end }}}">{./title}</a>
 				</h3>
 				<span component="topic/labels" class="d-flex flex-wrap gap-1 w-100">
+
+					<span class="badge border border-gray-300 text-body">
+        				<a href="{config.relative_path}/user/{./user.userslug}" class="text-decoration-none text-reset">
+            				@{./user.username}
+        				</a>{{{ if ./user.groupTitle }}} · {./user.groupTitle}{{{ end }}}
+    				</span>
+					
 					<span component="topic/watched" class="badge border border-gray-300 text-body {{{ if !./followed }}}hidden{{{ end }}}">
 						<i class="fa fa-bell-o"></i>
 						<span>[[topic:watching]]</span>
