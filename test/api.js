@@ -545,7 +545,6 @@ describe('API', async () => {
 				
 				//flakey test
 				// Recursively iterate through schema properties, comparing type
-				//flakey test
 				it.skip('response body should match schema definition', () => {
 					const http302 = context[method].responses['302'];
 					if (http302 && result.response.statusCode === 302) {

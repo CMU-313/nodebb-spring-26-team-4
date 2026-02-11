@@ -55,6 +55,7 @@
 
 	"users.uid": "uid",
 	"users.username": "username",
+	"users.groups": "groups",
 	"users.email": "email",
 	"users.no-email": "(no email)",
 	"users.validated": "Validated",
