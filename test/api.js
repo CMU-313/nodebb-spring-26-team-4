@@ -188,6 +188,7 @@ describe('API', async () => {
 		//flakey test
 		const adminUid = await user.create({ username: 'admin', password: '123456' });
 		const unprivUid = await user.create({ username: 'unpriv', password: '123456' });
+		// flakey test
 		//const emailConfirmationUid = await user.create({ username: 'emailConf', email: 'emailConf@example.org' });
 		//await user.setUserField(adminUid, 'email', 'test@example.org');
 		//await user.setUserField(unprivUid, 'email', 'unpriv@example.org');
@@ -529,6 +530,7 @@ describe('API', async () => {
 						assert(!e, `${method.toUpperCase()} ${path} errored with: ${e.message}`);
 					}
 				});
+
 				
 				//flakey test
 				it.skip('response status code should match one of the schema defined responses', () => {
@@ -543,6 +545,7 @@ describe('API', async () => {
 				
 				//flakey test
 				// Recursively iterate through schema properties, comparing type
+				//flakey test
 				it.skip('response body should match schema definition', () => {
 					const http302 = context[method].responses['302'];
 					if (http302 && result.response.statusCode === 302) {
