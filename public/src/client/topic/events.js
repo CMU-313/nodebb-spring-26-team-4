@@ -44,6 +44,7 @@ define('forum/topic/events', [
 		'posts.downvote': togglePostVote,
 		'posts.unvote': togglePostVote,
 
+		'event:post_endorsed': onPostEndorsed,
 		'event:new_notification': onNewNotification,
 		'event:new_post': posts.onNewPost,
 	};
@@ -246,6 +247,24 @@ define('forum/topic/events', [
 
 		el.find('[component="post/bookmark/on"]').toggleClass('hidden', !data.isBookmarked);
 		el.find('[component="post/bookmark/off"]').toggleClass('hidden', data.isBookmarked);
+	}
+
+	function onPostEndorsed(data) {
+		if (!data || !data.pid) {
+			return;
+		}
+		const postEl = components.get('post', 'pid', data.pid);
+		if (!postEl.length) {
+			return;
+		}
+		const isEndorsed = !!data.endorsed;
+		postEl.toggleClass('endorsed', isEndorsed);
+
+		// Toggle the endorsed indicator badge in the post header
+		postEl.find('[component="post/endorsed-indicator"]').toggleClass('opacity-0', !isEndorsed);
+
+		// Force dropdown menu reload on next open so it reflects the new state
+		postTools.removeMenu(postEl);
 	}
 
 	function togglePostVote(data) {

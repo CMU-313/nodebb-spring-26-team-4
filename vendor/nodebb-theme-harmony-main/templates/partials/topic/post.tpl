@@ -75,6 +75,7 @@
 				{{{ end }}}
 			</div>
 			<div class="d-flex align-items-center gap-1 justify-content-end">
+				<span component="post/endorsed-indicator" class="endorsed-indicator {{{ if !posts.endorsed }}}opacity-0{{{ end }}} text-success" title="[[topic:endorsed]]"><i class="fa fa-check-circle"></i></span>
 				<span class="bookmarked opacity-0 text-primary"><i class="fa fa-bookmark-o"></i></span>
 				<a href="{config.relative_path}/post/{encodeURIComponent(./pid)}" class="post-index text-muted d-none d-md-inline">#{increment(./index, "1")}</a>
 			</div>

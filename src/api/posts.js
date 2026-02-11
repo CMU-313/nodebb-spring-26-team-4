@@ -473,6 +473,42 @@ postsAPI.unbookmark = async function (caller, data) {
 	return await apiHelpers.postCommand(caller, 'unbookmark', 'bookmarked', '', data);
 };
 
+postsAPI.endorse = async function (caller, data) {
+	if (!data || !data.pid) {
+		throw new Error('[[error:invalid-data]]');
+	}
+	const canEndorse = await privileges.global.can('posts:endorse', caller.uid);
+	if (!canEndorse) {
+		throw new Error('[[error:no-privileges]]');
+	}
+	const exists = await posts.exists(data.pid);
+	if (!exists) {
+		throw new Error('[[error:invalid-pid]]');
+	}
+	await posts.setPostField(data.pid, 'endorsed', 1);
+	const tid = await posts.getPostField(data.pid, 'tid');
+	websockets.in(`topic_${tid}`).emit('event:post_endorsed', { pid: data.pid, endorsed: 1 });
+	return { pid: data.pid, endorsed: 1 };
+};
+
+postsAPI.unendorse = async function (caller, data) {
+	if (!data || !data.pid) {
+		throw new Error('[[error:invalid-data]]');
+	}
+	const canEndorse = await privileges.global.can('posts:endorse', caller.uid);
+	if (!canEndorse) {
+		throw new Error('[[error:no-privileges]]');
+	}
+	const exists = await posts.exists(data.pid);
+	if (!exists) {
+		throw new Error('[[error:invalid-pid]]');
+	}
+	await posts.setPostField(data.pid, 'endorsed', 0);
+	const tid = await posts.getPostField(data.pid, 'tid');
+	websockets.in(`topic_${tid}`).emit('event:post_endorsed', { pid: data.pid, endorsed: 0 });
+	return { pid: data.pid, endorsed: 0 };
+};
+
 async function diffsPrivilegeCheck(pid, uid) {
 	const [deleted, privilegesData] = await Promise.all([
 		posts.getPostField(pid, 'deleted'),

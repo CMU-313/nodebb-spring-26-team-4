@@ -289,6 +289,10 @@ define('forum/topic/postTools', [
 		postContainer.on('click', '[component="post/chat"]', function () {
 			openChat($(this));
 		});
+
+		postContainer.on('click', '[component="post/endorse"]', function () {
+			toggleEndorse($(this));
+		});
 	}
 
 	async function onReplyClicked(button, tid) {
@@ -429,6 +433,14 @@ define('forum/topic/postTools', [
 
 	function purgePost(button) {
 		postAction('purge', getData(button, 'data-pid'));
+	}
+
+	async function toggleEndorse(button) {
+		const pid = getData(button, 'data-pid');
+		const endorseBtn = button.closest('[component="post/endorse"]');
+		const isEndorsed = endorseBtn.attr('data-endorsed') === '1';
+		const method = isEndorsed ? 'del' : 'put';
+		api[method](`/posts/${encodeURIComponent(pid)}/endorse`).catch(alerts.error);
 	}
 
 	async function postAction(action, pid) {

@@ -261,5 +261,8 @@
 	"thumb-image": "Topic thumbnail image",
 
 	"announcers": "Shares",
-	"announcers-x": "Shares (%1)"
+	"announcers-x": "Shares (%1)",
+	"endorse": "Endorse",
+    "unendorse": "Unendorse",
+    "endorsed": "Endorsed"
 }

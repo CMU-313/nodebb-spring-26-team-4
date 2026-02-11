@@ -77,7 +77,7 @@
 					<div class="posts-container" style="min-width: 0;">
 						<ul component="topic" class="posts timeline list-unstyled p-0 py-3" style="min-width: 0;" data-tid="{tid}" data-cid="{cid}">
 						{{{ each posts }}}
-							<li component="post" class="{{{ if (./index != 0) }}}pt-4{{{ end }}} {{{ if posts.deleted }}}deleted{{{ end }}} {{{ if posts.selfPost }}}self-post{{{ end }}} {{{ if posts.topicOwnerPost }}}topic-owner-post{{{ end }}}" <!-- IMPORT partials/data/topic.tpl -->>
+							<li component="post" class="{{{ if (./index != 0) }}}pt-4{{{ end }}} {{{ if posts.deleted }}}deleted{{{ end }}} {{{ if posts.selfPost }}}self-post{{{ end }}} {{{ if posts.topicOwnerPost }}}topic-owner-post{{{ end }}} {{{ if posts.endorsed }}}endorsed{{{ end }}}" <!-- IMPORT partials/data/topic.tpl -->>
 								<a component="post/anchor" data-index="{./index}" id="{increment(./index, "1")}"></a>
 								<meta itemprop="datePublished" content="{./timestampISO}">
 								{{{ if ./editedISO }}}

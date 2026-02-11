@@ -11,6 +11,7 @@ const categories = require('../categories');
 const plugins = require('../plugins');
 const utils = require('../utils');
 const privsCategories = require('./categories');
+const privsGlobal = require('./global');
 
 const privsTopics = module.exports;
 
@@ -24,7 +25,7 @@ privsTopics.get = async function (tid, uid) {
 		'posts:delete', 'posts:view_deleted', 'read', 'purge',
 	];
 	const topicData = await topics.getTopicFields(tid, ['cid', 'uid', 'locked', 'deleted', 'scheduled']);
-	const [userPrivileges, isAdministrator, isModerator, disabled, topicTools] = await Promise.all([
+	const [userPrivileges, isAdministrator, isModerator, disabled, topicTools, canEndorse] = await Promise.all([
 		helpers.isAllowedTo(privs, uid, topicData.cid),
 		user.isAdministrator(uid),
 		user.isModerator(uid, topicData.cid),
@@ -34,6 +35,7 @@ privsTopics.get = async function (tid, uid) {
 			uid: uid,
 			tools: [],
 		}),
+		privsGlobal.can('posts:endorse', uid),
 	]);
 	const privData = _.zipObject(privs, userPrivileges);
 	const isOwner = uid > 0 && uid === topicData.uid;
@@ -54,6 +56,7 @@ privsTopics.get = async function (tid, uid) {
 		'posts:upvote': privData['posts:upvote'] || isAdministrator,
 		'posts:downvote': privData['posts:downvote'] || isAdministrator,
 		'posts:delete': (privData['posts:delete'] && (!topicData.locked || isModerator)) || isAdministrator,
+		'posts:endorse': canEndorse,
 		'posts:view_deleted': privData['posts:view_deleted'] || isAdministrator,
 		read: privData.read || isAdministrator,
 		purge: (privData.purge && (isOwner || isModerator)) || isAdministrator,
@@ -191,13 +194,13 @@ privsTopics.isAdminOrMod = async function (tid, uid) {
 	return await privsCategories.isAdminOrMod(cid, uid);
 };
 
-privsTopics.canViewDeletedScheduled = function (topic, privileges = {}, viewDeleted = false, viewScheduled = false) {
+privsTopics.canViewDeletedScheduled = function (topic, privileges = {}) {
 	if (!topic) {
 		return false;
 	}
 	const { deleted = false, scheduled = false } = topic;
-	const { view_deleted = viewDeleted, view_scheduled = viewScheduled } = privileges;
-
+	const { view_deleted = false, view_scheduled = false } = privileges;
+	
 	// conceptually exclusive, scheduled topics deemed to be not deleted (they can only be purged)
 	if (scheduled) {
 		return view_scheduled;

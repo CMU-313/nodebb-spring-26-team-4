@@ -441,7 +441,8 @@ async function giveInstructorPrivileges() {
 	];
 	await privileges.categories.give(instructorPrivileges, -1, ['Instructors']);
 	
-	await privileges.global.give(['groups:ban'], 'Instructors');  
+	await privileges.global.give(['groups:ban'], 'Instructors');
+	await privileges.global.give(['groups:posts:endorse'], 'Instructors');
 }
 
 async function createGlobalModeratorsGroup() {
