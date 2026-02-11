@@ -477,7 +477,7 @@ postsAPI.endorse = async function (caller, data) {
 	if (!data || !data.pid) {
 		throw new Error('[[error:invalid-data]]');
 	}
-	const canEndorse = await privileges.posts.can('posts:endorse', data.pid, caller.uid);
+	const canEndorse = await privileges.global.can('posts:endorse', caller.uid);
 	if (!canEndorse) {
 		throw new Error('[[error:no-privileges]]');
 	}
@@ -495,7 +495,7 @@ postsAPI.unendorse = async function (caller, data) {
 	if (!data || !data.pid) {
 		throw new Error('[[error:invalid-data]]');
 	}
-	const canEndorse = await privileges.posts.can('posts:endorse', data.pid, caller.uid);
+	const canEndorse = await privileges.global.can('posts:endorse', caller.uid);
 	if (!canEndorse) {
 		throw new Error('[[error:no-privileges]]');
 	}

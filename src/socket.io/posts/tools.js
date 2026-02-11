@@ -29,7 +29,7 @@ module.exports = function (SocketPosts) {
 			canPurge: privileges.posts.canPurge(data.pid, socket.uid),
 			canFlag: privileges.posts.canFlag(data.pid, socket.uid),
 			canViewHistory: privileges.posts.can('posts:history', data.pid, socket.uid),
-			canEndorse: privileges.posts.can('posts:endorse', data.pid, socket.uid),
+			canEndorse: privileges.global.can('posts:endorse', socket.uid),
 			flagged: flags.exists('post', data.pid, socket.uid), // specifically, whether THIS calling user flagged
 			bookmarked: posts.hasBookmarked(data.pid, socket.uid),
 			postSharing: social.getActivePostSharing(),
