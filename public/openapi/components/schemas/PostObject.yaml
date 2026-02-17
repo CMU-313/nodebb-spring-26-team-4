@@ -184,6 +184,9 @@ PostDataObject:
           type: number
         bookmarks:
           type: number
+        endorsed:
+          type: number
+          description: Whether this post has been endorsed (0 or 1)
         deleterUid:
           type: number
         edited:
