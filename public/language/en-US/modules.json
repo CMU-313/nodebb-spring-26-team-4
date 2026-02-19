@@ -87,6 +87,7 @@
     "composer.submit-and-lock": "Submit and Lock",
     "composer.toggle-dropdown": "Toggle Dropdown",
     "composer.uploading": "Uploading %1",
+    "composer.post-anonymously": "Post Anonymously",
     "composer.formatting.bold": "Bold",
     "composer.formatting.italic": "Italic",
     "composer.formatting.heading": "Heading",
