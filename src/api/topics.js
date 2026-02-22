@@ -82,9 +82,9 @@ topicsAPI.create = async function (caller, data) {
 
 	if (!isScheduling) {
 		// Use real author UID for ActivityPub if posted anonymously
-   		const anonymous = require('../posts/anonymous');
-   		const activitypubUid = anonymous.getRealAuthorUid(postData, caller.uid);
-   		await activitypub.out.create.note(activitypubUid, postData);
+		const anonymous = require('../posts/anonymous');
+		const activitypubUid = anonymous.getRealAuthorUid(result.postData, caller.uid);
+		await activitypub.out.create.note(activitypubUid, result.postData.pid);
 	}
 
 	return result.topicData;
@@ -122,9 +122,9 @@ topicsAPI.reply = async function (caller, data) {
 
 	socketHelpers.notifyNew(caller.uid, 'newPost', result);
 	// Use real author UID for ActivityPub if posted anonymously
-   	const anonymous = require('../posts/anonymous');
-   	const activitypubUid = anonymous.getRealAuthorUid(postData, caller.uid);
-	await activitypub.out.create.note(caller.uid, postData);
+	const anonymous = require('../posts/anonymous');
+	const activitypubUid = anonymous.getRealAuthorUid(postData, caller.uid);
+	await activitypub.out.create.note(activitypubUid, postData);
 
 	return postData;
 };
