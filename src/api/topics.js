@@ -57,6 +57,7 @@ topicsAPI.create = async function (caller, data) {
 	const payload = { ...data };
 	delete payload.tid;
 	payload.tags = payload.tags || [];
+	payload.isAnonymous = data.isAnonymous || false;
 	apiHelpers.setDefaultPostData(caller, payload);
 	const isScheduling = parseInt(data.timestamp, 10) > payload.timestamp;
 	if (isScheduling) {
@@ -80,7 +81,10 @@ topicsAPI.create = async function (caller, data) {
 	socketHelpers.notifyNew(caller.uid, 'newTopic', { posts: [result.postData], topic: result.topicData });
 
 	if (!isScheduling) {
-		await activitypub.out.create.note(caller.uid, result.postData.pid);
+		// Use real author UID for ActivityPub if posted anonymously
+   		const anonymous = require('../posts/anonymous');
+   		const activitypubUid = anonymous.getRealAuthorUid(postData, caller.uid);
+   		await activitypub.out.create.note(activitypubUid, postData);
 	}
 
 	return result.topicData;
@@ -92,6 +96,7 @@ topicsAPI.reply = async function (caller, data) {
 	}
 	const payload = { ...data };
 	delete payload.pid;
+	payload.isAnonymous = data.isAnonymous || false;
 	apiHelpers.setDefaultPostData(caller, payload);
 
 	await meta.blacklist.test(caller.ip);
@@ -116,6 +121,9 @@ topicsAPI.reply = async function (caller, data) {
 	}
 
 	socketHelpers.notifyNew(caller.uid, 'newPost', result);
+	// Use real author UID for ActivityPub if posted anonymously
+   	const anonymous = require('../posts/anonymous');
+   	const activitypubUid = anonymous.getRealAuthorUid(postData, caller.uid);
 	await activitypub.out.create.note(caller.uid, postData);
 
 	return postData;
