@@ -7,8 +7,7 @@ const user = require('../user');
 const topics = require('../topics');
 const categories = require('../categories');
 const groups = require('../groups');
-const activitypub = require('../activitypub');
-const utils = require('../utils');
+const activitypub = require('../activitypub');const anonymous = require('./anonymous');const utils = require('../utils');
 
 module.exports = function (Posts) {
 	Posts.create = async function (data) {
@@ -29,6 +28,11 @@ module.exports = function (Posts) {
 
 		const pid = data.pid || await db.incrObjectField('global', 'nextPid');
 		let postData = { pid, uid, tid, content, sourceContent, timestamp, endorsed: 0 };
+
+		// Handle anonymous posting
+		if (data.isAnonymous && parseInt(uid, 10) > 0) {
+			anonymous.applyAnonymousFields(postData, uid);
+		}
 
 		if (data.toPid) {
 			postData.toPid = data.toPid;
@@ -74,16 +78,21 @@ module.exports = function (Posts) {
 		const topicData = await topics.getTopicFields(tid, ['cid', 'pinned']);
 		postData.cid = topicData.cid;
 
+		// Use realUid for user stats if posting anonymously
+		const userStatsUid = anonymous.getStatsUid(postData);
+		const userPostData = anonymous.isAnonymousPost(postData) ? { ...postData, uid: userStatsUid } : postData;
+
 		await Promise.all([
 			db.sortedSetAdd('posts:pid', timestamp, postData.pid),
 			utils.isNumber(pid) ? db.incrObjectField('global', 'postCount') : null,
-			user.onNewPostMade(postData),
+			user.onNewPostMade(userPostData),
 			topics.onNewPostMade(postData),
 			categories.onNewPostMade(topicData.cid, topicData.pinned, postData),
 			groups.onNewPostMade(postData),
 			addReplyTo(postData, timestamp),
 			Posts.uploads.sync(pid),
 			hasAttachment ? Posts.attachments.update(pid, _activitypub.attachment) : null,
+			anonymous.isAnonymousPost(postData) ? db.sortedSetAdd(`uid:${userStatsUid}:posts:anonymous`, timestamp, postData.pid) : null,
 		]);
 
 		const result = await plugins.hooks.fire('filter:post.get', { post: postData, uid: data.uid });
