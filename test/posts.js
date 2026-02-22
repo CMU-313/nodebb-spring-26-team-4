@@ -1259,6 +1259,122 @@ describe('Post\'s', () => {
 			});
 		});
 	});
+
+	describe('endorsement', () => {
+		let endorseAdminUid;
+		let endorsePostData;
+
+		before(async () => {
+			endorseAdminUid = await user.create({ username: 'endorseAdmin' });
+			await groups.join('administrators', endorseAdminUid);
+			const result = await topics.post({
+				uid: voteeUid,
+				cid: cid,
+				title: 'Test Topic for Endorsement',
+				content: 'Test content for endorsement',
+			});
+			endorsePostData = result.postData;
+		});
+
+		it('should throw invalid-data error if data is null when endorsing', async () => {
+			await assert.rejects(
+				apiPosts.endorse({ uid: endorseAdminUid }, null),
+				{ message: '[[error:invalid-data]]' }
+			);
+		});
+
+		it('should throw invalid-data error if pid is missing when endorsing', async () => {
+			await assert.rejects(
+				apiPosts.endorse({ uid: endorseAdminUid }, {}),
+				{ message: '[[error:invalid-data]]' }
+			);
+		});
+
+		it('should throw no-privileges error for user without endorse privilege', async () => {
+			await assert.rejects(
+				apiPosts.endorse({ uid: voterUid }, { pid: endorsePostData.pid }),
+				{ message: '[[error:no-privileges]]' }
+			);
+		});
+
+		it('should throw invalid-pid error if post does not exist when endorsing', async () => {
+			await assert.rejects(
+				apiPosts.endorse({ uid: endorseAdminUid }, { pid: 99999 }),
+				{ message: '[[error:invalid-pid]]' }
+			);
+		});
+
+		it('should endorse a post and return endorsed status 1', async () => {
+			const result = await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(result.pid, endorsePostData.pid);
+			assert.strictEqual(result.endorsed, 1);
+			const endorsed = await posts.getPostField(endorsePostData.pid, 'endorsed');
+			assert.strictEqual(endorsed, 1);
+		});
+
+		it('should throw invalid-data error if data is null when unendorsing', async () => {
+			await assert.rejects(
+				apiPosts.unendorse({ uid: endorseAdminUid }, null),
+				{ message: '[[error:invalid-data]]' }
+			);
+		});
+
+		it('should throw invalid-data error if pid is missing when unendorsing', async () => {
+			await assert.rejects(
+				apiPosts.unendorse({ uid: endorseAdminUid }, {}),
+				{ message: '[[error:invalid-data]]' }
+			);
+		});
+
+		it('should throw no-privileges error for user without endorse privilege when unendorsing', async () => {
+			await assert.rejects(
+				apiPosts.unendorse({ uid: voterUid }, { pid: endorsePostData.pid }),
+				{ message: '[[error:no-privileges]]' }
+			);
+		});
+
+		it('should throw invalid-pid error if post does not exist when unendorsing', async () => {
+			await assert.rejects(
+				apiPosts.unendorse({ uid: endorseAdminUid }, { pid: 99999 }),
+				{ message: '[[error:invalid-pid]]' }
+			);
+		});
+
+		it('should unendorse a post and return endorsed status 0', async () => {
+			const result = await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(result.pid, endorsePostData.pid);
+			assert.strictEqual(result.endorsed, 0);
+			const endorsed = await posts.getPostField(endorsePostData.pid, 'endorsed');
+			assert.strictEqual(endorsed, 0);
+		});
+
+		it('should create posts with endorsed field set to 0 by default', async () => {
+			const result = await topics.post({
+				uid: voteeUid,
+				cid: cid,
+				title: 'New Post for Default Endorsed Check',
+				content: 'Checking default endorsed state',
+			});
+			const endorsed = await posts.getPostField(result.postData.pid, 'endorsed');
+			assert.strictEqual(endorsed, 0);
+		});
+
+		it('should show endorse tools for users with endorse privilege', async () => {
+			const result = await socketPosts.loadPostTools(
+				{ uid: endorseAdminUid },
+				{ pid: endorsePostData.pid, cid: cid }
+			);
+			assert.strictEqual(result.posts.display_endorse_tools, true);
+		});
+
+		it('should not show endorse tools for users without endorse privilege', async () => {
+			const result = await socketPosts.loadPostTools(
+				{ uid: voterUid },
+				{ pid: endorsePostData.pid, cid: cid }
+			);
+			assert.strictEqual(result.posts.display_endorse_tools, false);
+		});
+	});
 });
 
 describe('Posts\'', async () => {
