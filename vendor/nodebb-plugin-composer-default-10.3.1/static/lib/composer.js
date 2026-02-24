@@ -395,6 +395,20 @@ define('composer', [
 			e.stopPropagation();
 			composer.minimize(post_uuid);
 		});
+		
+		postContainer.find('[data-action="anonymous"]').on('click', function (e) {
+			e.preventDefault();
+			const btn = $(this);
+			const isAnonymous = !composer.posts[post_uuid].isAnonymous;
+			// Toggle the state
+			composer.posts[post_uuid].isAnonymous = isAnonymous;
+			// Update button styling
+			if (isAnonymous) {
+				btn.addClass('btn-primary text-white').removeClass('btn-link text-body');
+			} else {
+				btn.removeClass('btn-primary text-white').addClass('btn-link text-body');
+			}
+		});
 
 		const textareaEl = postContainer.find('textarea');
 		textareaEl.on('input propertychange', utils.debounce(function () {
@@ -740,6 +754,7 @@ define('composer', [
 				tags: tags.getTags(post_uuid),
 				thumbs: postData.thumbs || [],
 				timestamp: scheduler.getTimestamp(),
+				isAnonymous: postData.isAnonymous || false,
 			};
 		} else if (action === 'posts.reply') {
 			route = `/topics/${postData.tid}`;
@@ -749,6 +764,7 @@ define('composer', [
 				handle: handleEl ? handleEl.val() : undefined,
 				content: bodyEl.val(),
 				toPid: postData.toPid,
+				isAnonymous: postData.isAnonymous || false,
 			};
 		} else if (action === 'posts.edit') {
 			method = 'put';

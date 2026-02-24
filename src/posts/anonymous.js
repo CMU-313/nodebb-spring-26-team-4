@@ -77,6 +77,49 @@ function getRealAuthorUid(postData, fallbackUid) {
 	return postData.realUid || fallbackUid;
 }
 
+/**
+ * Applies anonymous display to a topic object (for category/topic lists)
+ * @param {Object} topic - Topic object with user data
+ */
+function overrideTopicUserDisplay(topic) {
+	if (isAnonymousPost(topic)) {
+		topic.user = getAnonymousUserData();
+		topic.realUid = topic.realUid || null;
+	}
+}
+
+/**
+ * Gets the effective UID for user stats (uses realUid for anonymous posts)
+ * @param {Object} postData - Post data object
+ * @returns {number} The UID to use for user statistics
+ */
+function getStatsUidTopic(topicData) {
+	return isAnonymousPost(topicData) ? topicData.realUid : topicData.uid;
+}
+
+/**
+ * Checks if a post should be displayed anonymously
+ * @param {Object} post - Post object
+ * @returns {boolean} True if post should be anonymous
+ */
+function isAnonymousTopic(topic) {
+	return Boolean(topic && topic.isAnonymous === 1);
+}
+
+/**
+ * Applies anonymous posting metadata to a post data object
+ * Used during post creation
+ * @param {Object} postData - The post data being created
+ * @param {number} uid - The real user ID
+ * @returns {Object} Modified post data with anonymous fields
+ */
+function applyAnonymousFieldsTopic(topicData, uid) {
+	topicData.isAnonymous = 1;
+	topicData.realUid = uid;
+	topicData.uid = 0; // Display as guest
+	return topicData;
+}
+
 module.exports = {
 	getAnonymousUserData,
 	isAnonymousPost,
@@ -84,4 +127,8 @@ module.exports = {
 	overrideUserDisplay,
 	getStatsUid,
 	getRealAuthorUid,
+	overrideTopicUserDisplay,
+	getStatsUidTopic,
+	isAnonymousTopic,
+	applyAnonymousFieldsTopic,
 };
