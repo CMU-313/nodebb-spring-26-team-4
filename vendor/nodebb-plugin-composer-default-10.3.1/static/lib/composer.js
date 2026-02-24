@@ -395,6 +395,20 @@ define('composer', [
 			e.stopPropagation();
 			composer.minimize(post_uuid);
 		});
+		
+		postContainer.find('[data-action="anonymous"]').on('click', function (e) {
+			e.preventDefault();
+			const btn = $(this);
+			const isAnonymous = !composer.posts[post_uuid].isAnonymous;
+			// Toggle the state
+			composer.posts[post_uuid].isAnonymous = isAnonymous;
+			// Update button styling
+			if (isAnonymous) {
+				btn.addClass('btn-primary text-white').removeClass('btn-link text-body');
+			} else {
+				btn.removeClass('btn-primary text-white').addClass('btn-link text-body');
+			}
+		});
 
 		postContainer.find('[data-action="anonymous"]').on('click', function (e) {
 			e.preventDefault();
