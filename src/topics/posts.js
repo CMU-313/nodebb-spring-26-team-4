@@ -149,6 +149,9 @@ module.exports = function (Topics) {
 					postObj.user.username = validator.escape(String(postObj.handle));
 					postObj.user.displayname = postObj.user.username;
 				}
+
+				// Override user display for anonymous posts
+				require('../posts/anonymous').overrideUserDisplay(postObj);
 			}
 		});
 

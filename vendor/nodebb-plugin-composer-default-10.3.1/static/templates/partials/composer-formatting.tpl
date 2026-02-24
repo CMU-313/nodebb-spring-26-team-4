@@ -59,7 +59,8 @@
 	</ul>
 	<div class="d-flex align-items-center gap-1">
 		<div class="draft-icon m-2 hidden-xs hidden-sm"></div>
-		<button class="btn btn-sm btn-link py-2 text-body fw-semibold text-nowrap">
+		<button class="btn btn-sm btn-link py-2 text-body fw-semibold text-nowrap anonymous-toggle" data-action="anonymous">
+			<i class="fa fa-user-secret"></i>
 			<span class="d-none d-xl-inline">Post Anonymously</span>
 		</button>
 		<button class="btn btn-sm btn-link py-2 text-body fw-semibold text-nowrap" data-action="preview">

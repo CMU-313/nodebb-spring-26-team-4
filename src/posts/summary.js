@@ -52,6 +52,10 @@ module.exports = function (Posts) {
 
 			post.user = uidToUser[post.uid];
 			Posts.overrideGuestHandle(post, post.handle);
+			
+			// Handle anonymous posts
+			require('./anonymous').overrideUserDisplay(post);
+			
 			post.handle = undefined;
 			post.topic = tidToTopic[post.tid];
 			post.category = post.topic && cidToCategory[post.topic.cid];
