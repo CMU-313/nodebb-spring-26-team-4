@@ -7,7 +7,9 @@ const user = require('../user');
 const topics = require('../topics');
 const categories = require('../categories');
 const groups = require('../groups');
-const activitypub = require('../activitypub');const anonymous = require('./anonymous');const utils = require('../utils');
+const activitypub = require('../activitypub');
+const anonymous = require('./anonymous');
+const utils = require('../utils');
 
 module.exports = function (Posts) {
 	Posts.create = async function (data) {
@@ -31,7 +33,7 @@ module.exports = function (Posts) {
 
 		// Handle anonymous posting
 		if (data.isAnonymous && parseInt(uid, 10) > 0) {
-			anonymous.applyAnonymousFields(postData, uid);
+			await anonymous.assignThreadIdentity(postData, uid, tid);
 		}
 
 		if (data.toPid) {
@@ -96,6 +98,9 @@ module.exports = function (Posts) {
 		]);
 
 		const result = await plugins.hooks.fire('filter:post.get', { post: postData, uid: data.uid });
+		if (anonymous.isAnonymousPost(result.post)) {
+			delete result.post.realUid;
+		}
 		result.post.isMain = isMain;
 		plugins.hooks.fire('action:post.save', { post: { ...result.post, _activitypub } });
 		return result.post;

@@ -14,6 +14,7 @@ const meta = require('../meta');
 const events = require('../events');
 const privileges = require('../privileges');
 const activitypub = require('../activitypub');
+const anonymous = require('../posts/anonymous');
 const apiHelpers = require('./helpers');
 const websockets = require('../socket.io');
 const socketHelpers = require('../socket.io/helpers');
@@ -36,6 +37,10 @@ postsAPI.get = async function (caller, data) {
 
 	Object.assign(post, voted);
 	post.ip = userPrivilege.isAdminOrMod ? post.ip : undefined;
+	if (anonymous.isAnonymousPost(post)) {
+		anonymous.overrideUserDisplay(post, { useThreadAlias: false });
+		delete post.realUid;
+	}
 
 	const selfPost = caller.uid && caller.uid === parseInt(post.uid, 10);
 	if (post.deleted && !(userPrivilege.isAdminOrMod || selfPost)) {
@@ -64,6 +69,9 @@ postsAPI.getSummary = async (caller, { pid }) => {
 
 	const postsData = await posts.getPostSummaryByPids([pid], caller.uid, { stripTags: false });
 	posts.modifyPostByPrivilege(postsData[0], topicPrivileges);
+	if (postsData[0] && anonymous.isAnonymousPost(postsData[0])) {
+		delete postsData[0].realUid;
+	}
 	return postsData[0];
 };
 

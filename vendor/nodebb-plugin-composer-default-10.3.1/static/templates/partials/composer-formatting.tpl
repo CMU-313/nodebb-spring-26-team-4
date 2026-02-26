@@ -59,11 +59,13 @@
 	</ul>
 	<div class="d-flex align-items-center gap-1">
 		<div class="draft-icon m-2 hidden-xs hidden-sm"></div>
-
-		<button class="btn btn-sm btn-link py-2 text-body fw-semibold text-nowrap anonymous-toggle" data-action="anonymous">
+		{{{ if showAnonymousToggle }}}
+		<label class="btn btn-sm btn-link py-2 text-body fw-semibold text-nowrap d-flex align-items-center gap-2">
+			<input component="composer/isAnonymous" type="checkbox" class="form-check-input m-0" {{{ if isAnonymous }}}checked{{{ end }}}>
 			<i class="fa fa-user-secret"></i>
 			<span class="d-none d-xl-inline">Post Anonymously</span>
-		</button>
+		</label>
+		{{{ end }}}
 		<button class="btn btn-sm btn-link py-2 text-body fw-semibold text-nowrap" data-action="preview">
 			<i class="fa fa-eye"></i>
 			<span class="d-none d-xl-inline show-text">[[modules:composer.show-preview]]</span>
@@ -77,4 +79,3 @@
 		{{{ end }}}
 	</div>
 </div>
-
