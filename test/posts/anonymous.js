@@ -164,7 +164,6 @@ describe('Anonymous Posts', () => {
 
 			assert.strictEqual(post.realUid, undefined);
 		});
-		*/
 
 		it('should set all anonymous user properties', () => {
 			const post = {
