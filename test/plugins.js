@@ -171,29 +171,55 @@ describe('Plugins', () => {
 		});
 	});
 
-	it('should get plugin data from nbbpm', (done) => {
-		plugins.get('nodebb-plugin-markdown', (err, data) => {
-			assert.ifError(err);
+	it('should get plugin data from nbbpm', async () => {
+		const originalGet = request.get;
+		request.get = async () => ({
+			response: { ok: true },
+			body: {
+				payload: {
+					name: 'nodebb-plugin-markdown',
+					url: 'https://example.org/nodebb-plugin-markdown',
+					description: 'markdown plugin',
+					latest: '1.0.0',
+				},
+			},
+		});
+
+		try {
+			const data = await plugins.get('nodebb-plugin-markdown');
 			const keys = ['id', 'name', 'url', 'description', 'latest', 'installed', 'active', 'latest'];
 			assert.equal(data.name, 'nodebb-plugin-markdown');
 			assert.equal(data.id, 'nodebb-plugin-markdown');
 			keys.forEach((key) => {
 				assert(data.hasOwnProperty(key));
 			});
-			done();
-		});
+		} finally {
+			request.get = originalGet;
+		}
 	});
 
-	it('should get a list of plugins', (done) => {
-		plugins.list((err, data) => {
-			assert.ifError(err);
+	it('should get a list of plugins', async () => {
+		const originalGet = request.get;
+		request.get = async () => ({
+			response: { ok: true },
+			body: [{
+				name: 'nodebb-plugin-markdown',
+				url: 'https://example.org/nodebb-plugin-markdown',
+				description: 'markdown plugin',
+				latest: '1.0.0',
+			}],
+		});
+
+		try {
+			const data = await plugins.list();
 			const keys = ['id', 'name', 'url', 'description', 'latest', 'installed', 'active', 'latest'];
 			assert(Array.isArray(data));
 			keys.forEach((key) => {
 				assert(data[0].hasOwnProperty(key));
 			});
-			done();
-		});
+		} finally {
+			request.get = originalGet;
+		}
 	});
 
 	it('should show installed plugins', (done) => {
@@ -402,5 +428,4 @@ describe('Plugins', () => {
 		});
 	});
 });
-
 

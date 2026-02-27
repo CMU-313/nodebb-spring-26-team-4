@@ -11,7 +11,7 @@ describe('Anonymous Posts', () => {
 			assert.strictEqual(anonUser.uid, 0);
 			assert.strictEqual(anonUser.username, 'Anonymous');
 			assert.strictEqual(anonUser.userslug, '');
-			assert.strictEqual(anonUser.picture, '');
+			assert.strictEqual(anonUser.picture, '/assets/uploads/system/anonymous-avatar.png');
 			assert.strictEqual(anonUser['icon:text'], 'A');
 			assert.strictEqual(anonUser['icon:bgColor'], '#999');
 			assert.strictEqual(anonUser.displayname, 'Anonymous');
@@ -175,7 +175,7 @@ describe('Anonymous Posts', () => {
 
 			assert.strictEqual(post.user.uid, 0);
 			assert.strictEqual(post.user.username, 'Anonymous');
-			assert.strictEqual(post.user.picture, '');
+			assert.strictEqual(post.user.picture, '/assets/uploads/system/anonymous-avatar.png');
 			assert.strictEqual(post.user['icon:text'], 'A');
 			assert.strictEqual(post.user['icon:bgColor'], '#999');
 			assert.strictEqual(post.user.banned, 0);

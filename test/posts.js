@@ -1025,7 +1025,7 @@ describe('Post\'s', () => {
 
 			assert.strictEqual(reply1.user.username, 'Anonymous');
 			assert.strictEqual(reply1.user.userslug, '');
-			assert.strictEqual(reply1.user.picture, '');
+			assert.strictEqual(reply1.user.picture, '/assets/uploads/system/anonymous-avatar.png');
 		});
 
 		it('should return plain Anonymous in post and summary APIs and hide realUid', async () => {
