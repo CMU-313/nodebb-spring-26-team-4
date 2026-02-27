@@ -16,6 +16,7 @@ const posts = require('../posts');
 const privileges = require('../privileges');
 const categories = require('../categories');
 const translator = require('../translator');
+const anonymous = require('../posts/anonymous');
 
 module.exports = function (Topics) {
 	Topics.create = async function (data) {
@@ -36,6 +37,10 @@ module.exports = function (Topics) {
 			postcount: 0,
 			viewcount: 0,
 		};
+
+		if (data.isAnonymous && parseInt(topicData.uid, 10) > 0) {
+			anonymous.applyAnonymousFieldsTopic(topicData, topicData.uid);
+		}
 
 		if (Array.isArray(data.tags) && data.tags.length) {
 			topicData.tags = data.tags.join(',');
@@ -69,6 +74,9 @@ module.exports = function (Topics) {
 			timestampedSortedSetKeys.push('topics:scheduled');
 		}
 
+		const userStatsUid = anonymous.getStatsUidTopic(topicData);
+		const userTopicData = anonymous.isAnonymousTopic(topicData) ? { ...topicData, uid: userStatsUid } : topicData;
+
 		await Promise.all([
 			db.sortedSetsAdd(timestampedSortedSetKeys, timestamp, topicData.tid),
 			db.sortedSetsAdd(countedSortedSetKeys, 0, topicData.tid),
@@ -77,9 +85,10 @@ module.exports = function (Topics) {
 			utils.isNumber(tid) ? db.incrObjectField('global', 'topicCount') : null,
 			Topics.createTags(data.tags, topicData.tid, timestamp),
 			scheduled ? Promise.resolve() : categories.updateRecentTid(topicData.cid, topicData.tid),
+			anonymous.isAnonymousTopic(topicData) ? db.sortedSetAdd(`uid:${userStatsUid}:topics:anonymous`, timestamp, topicData.pid) : null,
 		]);
 		if (scheduled) {
-			await Topics.scheduled.pin(tid, topicData);
+			await Topics.scheduled.pin(tid, userTopicData);
 		}
 
 		plugins.hooks.fire('action:topic.save', { topic: _.clone(topicData), data: data });

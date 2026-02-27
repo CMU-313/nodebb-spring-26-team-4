@@ -8,6 +8,7 @@ const intFields = [
 	'uid', 'pid', 'tid', 'deleted', 'timestamp',
 	'upvotes', 'downvotes', 'deleterUid', 'edited',
 	'replies', 'bookmarks', 'announces', 'endorsed',
+	'isAnonymous', 'realUid', 'anonymousAliasId',
 ];
 
 module.exports = function (Posts) {

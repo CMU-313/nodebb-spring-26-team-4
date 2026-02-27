@@ -202,6 +202,8 @@ paths:
     $ref: 'write/posts/pid/diffs.yaml'
   /posts/{pid}/diffs/{since}:
     $ref: 'write/posts/pid/diffs/since.yaml'
+  /posts/{pid}/endorse:
+    $ref: 'write/posts/pid/endorse.yaml'
   /posts/{pid}/diffs/{timestamp}:
     $ref: 'write/posts/pid/diffs/timestamp.yaml'
   /posts/{pid}/replies:
