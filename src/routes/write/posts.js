@@ -34,6 +34,7 @@ module.exports = function () {
 	setupApiRoute(router, 'put', '/:pid/bookmark', middlewares, controllers.write.posts.bookmark);
 	setupApiRoute(router, 'delete', '/:pid/bookmark', middlewares, controllers.write.posts.unbookmark);
 
+	// Endorse/unendorse: toggle the endorsed state of a post (requires global 'posts:endorse' privilege)
 	setupApiRoute(router, 'put', '/:pid/endorse', middlewares, controllers.write.posts.endorse);
 	setupApiRoute(router, 'delete', '/:pid/endorse', middlewares, controllers.write.posts.unendorse);
 

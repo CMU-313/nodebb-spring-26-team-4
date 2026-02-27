@@ -481,6 +481,12 @@ postsAPI.unbookmark = async function (caller, data) {
 	return await apiHelpers.postCommand(caller, 'unbookmark', 'bookmarked', '', data);
 };
 
+/*
+ * Endorse/Unendorse API handlers
+ * Sets the 'endorsed' field on a post (0 or 1) and emits a real-time websocket event
+ * so all clients viewing the topic see the change immediately.
+ * Requires the global 'posts:endorse' privilege (configurable in Admin > Manage > Privileges > Moderation tab).
+ */
 postsAPI.endorse = async function (caller, data) {
 	if (!data || !data.pid) {
 		throw new Error('[[error:invalid-data]]');
