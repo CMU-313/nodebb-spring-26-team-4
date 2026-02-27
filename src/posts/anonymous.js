@@ -1,22 +1,36 @@
 'use strict';
 
+const crypto = require('crypto');
+const db = require('../database');
+const utils = require('../utils');
+
 /**
  * Helper module for anonymous posting functionality
  */
 
+const ADJECTIVES = [
+	'Calm', 'Bold', 'Quiet', 'Curious', 'Brave', 'Kind', 'Swift', 'Bright',
+	'Wise', 'Mellow', 'Steady', 'Gentle', 'Clever', 'Nimble', 'Patient', 'Friendly',
+];
+const ANIMALS = [
+	'Bear', 'Penguin', 'Fox', 'Otter', 'Falcon', 'Panda', 'Koala', 'Dolphin',
+	'Lynx', 'Hedgehog', 'Eagle', 'Raven', 'Turtle', 'Bison', 'Wolf', 'Seahorse',
+];
+
 /**
  * Creates a standardized anonymous user object for display
+ * @param {string} [displayname='Anonymous'] - Display name for anonymous user
  * @returns {Object} Anonymous user object
  */
-function getAnonymousUserData() {
+function getAnonymousUserData(displayname = 'Anonymous') {
 	return {
 		uid: 0,
 		username: 'Anonymous',
 		userslug: '',
-		picture: '/assets/uploads/system/anonymous-avatar.png',
+		picture: '',
 		'icon:text': 'A',
 		'icon:bgColor': '#999',
-		displayname: 'Anonymous',
+		displayname,
 		banned: 0,
 		status: 'offline',
 	};
@@ -28,7 +42,7 @@ function getAnonymousUserData() {
  * @returns {boolean} True if post should be anonymous
  */
 function isAnonymousPost(post) {
-	return Boolean(post && post.isAnonymous === 1);
+	return Boolean(post && parseInt(post.isAnonymous, 10) === 1);
 }
 
 /**
@@ -45,16 +59,72 @@ function applyAnonymousFields(postData, uid) {
 	return postData;
 }
 
+function getAliasDisplayName(aliasId) {
+	if (!utils.isNumber(aliasId) || parseInt(aliasId, 10) <= 0) {
+		return 'Anonymous';
+	}
+	const normalized = parseInt(aliasId, 10) - 1;
+	const adjective = ADJECTIVES[normalized % ADJECTIVES.length];
+	const animal = ANIMALS[Math.floor(normalized / ADJECTIVES.length) % ANIMALS.length];
+	return `Anonymous ${adjective} ${animal}`;
+}
+
+function getFallbackAliasId(realUid, tid) {
+	const hash = crypto
+		.createHash('sha256')
+		.update(`${realUid}:${tid}`)
+		.digest('hex')
+		.slice(0, 8);
+	return (parseInt(hash, 16) % 4096) + 1;
+}
+
+async function assignThreadIdentity(postData, uid, tid) {
+	applyAnonymousFields(postData, uid);
+
+	if (!utils.isNumber(tid)) {
+		postData.anonymousAliasId = getFallbackAliasId(uid, String(tid || ''));
+		return postData;
+	}
+
+	const identityMapKey = `tid:${tid}:anonymous:uids`;
+	let aliasId = await db.getObjectField(identityMapKey, uid);
+	if (!utils.isNumber(aliasId)) {
+		aliasId = await db.incrObjectField(`tid:${tid}:anonymous`, 'nextAliasId');
+		await db.setObjectField(identityMapKey, uid, aliasId);
+	}
+
+	postData.anonymousAliasId = parseInt(aliasId, 10) || getFallbackAliasId(uid, tid);
+	return postData;
+}
+
+function getAnonymousDisplayName(post, options = {}) {
+	if (!isAnonymousPost(post)) {
+		return post && post.user && post.user.displayname ? post.user.displayname : '';
+	}
+
+	const useThreadAlias = options.useThreadAlias === true;
+	if (!useThreadAlias) {
+		return 'Anonymous';
+	}
+
+	const aliasId = utils.isNumber(post.anonymousAliasId) ?
+		parseInt(post.anonymousAliasId, 10) :
+		getFallbackAliasId(post.realUid, post.tid);
+
+	return getAliasDisplayName(aliasId);
+}
+
 /**
  * Overrides the user display data for an anonymous post
  * Used when loading post data for display
  * @param {Object} post - Post object with user data
  */
-function overrideUserDisplay(post) {
+function overrideUserDisplay(post, options = {}) {
 	if (isAnonymousPost(post)) {
-		post.user = getAnonymousUserData();
-		// Preserve realUid for moderation/privilege checks
-		post.realUid = post.realUid || null;
+		post.user = getAnonymousUserData(getAnonymousDisplayName(post, options));
+		post.user.custom_profile_info = [];
+		post.user.selectedGroups = [];
+		post.user.signature = '';
 	}
 }
 
@@ -124,6 +194,7 @@ module.exports = {
 	getAnonymousUserData,
 	isAnonymousPost,
 	applyAnonymousFields,
+	assignThreadIdentity,
 	overrideUserDisplay,
 	getStatsUid,
 	getRealAuthorUid,

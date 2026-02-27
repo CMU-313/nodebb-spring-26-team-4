@@ -91,6 +91,7 @@ define('composer/drafts', ['api', 'alerts'], function (api, alerts) {
 					text: raw,
 					uuid: postContainer.attr('data-uuid'),
 					timestamp: Date.now(),
+					isAnonymous: postContainer.find('[component="composer/isAnonymous"]').is(':checked'),
 				};
 
 				if (postData.action === 'topics.post') {
@@ -268,6 +269,7 @@ define('composer/drafts', ['api', 'alerts'], function (api, alerts) {
 					body: draft.text,
 					tags: String(draft.tags || '').split(','),
 					thumbs: draft.thumbs || [],
+					isAnonymous: !!draft.isAnonymous,
 				});
 			} else if (draft.action === 'posts.reply') {
 				api.get('/topics/' + draft.tid, {}, function (err, topicObj) {
@@ -281,6 +283,7 @@ define('composer/drafts', ['api', 'alerts'], function (api, alerts) {
 						toPid: draft.toPid,
 						title: topicObj.title,
 						body: draft.text,
+						isAnonymous: !!draft.isAnonymous,
 					});
 				});
 			} else if (draft.action === 'posts.edit') {
