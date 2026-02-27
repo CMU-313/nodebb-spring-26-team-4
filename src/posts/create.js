@@ -29,8 +29,7 @@ module.exports = function (Posts) {
 		}
 
 		const pid = data.pid || await db.incrObjectField('global', 'nextPid');
-		// endorsed: 0 — new posts are created unendorsed; users with the global 'posts:endorse' privilege can endorse them later
-	let postData = { pid, uid, tid, content, sourceContent, timestamp, endorsed: 0 };
+		let postData = { pid, uid, tid, content, sourceContent, timestamp, endorsed: 0 };
 
 		// Handle anonymous posting
 		if (data.isAnonymous && parseInt(uid, 10) > 0) {

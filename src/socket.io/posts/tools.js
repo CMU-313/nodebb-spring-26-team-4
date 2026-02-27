@@ -52,7 +52,7 @@ module.exports = function (SocketPosts) {
 		postData.display_manage_editors_tools = results.isAdmin || results.isModerator || postData.selfPost;
 		postData.display_ip_ban = (results.isAdmin || results.isGlobalMod) && !postData.selfPost;
 		postData.display_history = results.history && results.canViewHistory;
-		postData.display_endorse_tools = results.canEndorse; // controls visibility of the endorse button in the post menu
+		postData.display_endorse_tools = results.canEndorse;
 		postData.display_original_url = !utils.isNumber(data.pid);
 		postData.flags = {
 			flagId: parseInt(results.posts.flagId, 10) || null,
