@@ -212,6 +212,26 @@ describe('Admin Controllers', () => {
 		assert(body.users.length > 0);
 	});
 
+	it('should include custom groups and exclude registered-users in /admin/manage/users payload', async () => {
+		await groups.create({
+			name: 'Teaching Assistants',
+			description: 'TA group for testing admin payload',
+		});
+		await groups.join('Teaching Assistants', regularUid);
+
+		const { response, body } = await request.get(`${nconf.get('url')}/api/admin/manage/users?query=regular&searchBy=username`, {
+			jar: jar,
+			json: true,
+		});
+
+		assert.strictEqual(response.statusCode, 200);
+		const regularUser = body.users.find(userObj => parseInt(userObj.uid, 10) === regularUid);
+		assert(regularUser);
+		assert(Array.isArray(regularUser.groups));
+		assert(regularUser.groups.some(group => group.name === 'Teaching Assistants'));
+		assert(!regularUser.groups.some(group => group.name === 'registered-users'));
+	});
+
 
 	it('should load /admin/manage/users?filters=banned', async () => {
 		const { response, body } = await request.get(`${nconf.get('url')}/api/admin/manage/users?filters=banned`, { jar: jar, json: true });
