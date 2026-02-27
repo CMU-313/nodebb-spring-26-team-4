@@ -1374,6 +1374,131 @@ describe('Post\'s', () => {
 			);
 			assert.strictEqual(result.posts.display_endorse_tools, false);
 		});
+
+		// --- endorsed field loaded on post load ---
+
+		it('should include endorsed field in loadPostTools posts object (default 0)', async () => {
+			// After previous tests, endorsePostData is in unendorsed state
+			const result = await socketPosts.loadPostTools(
+				{ uid: endorseAdminUid },
+				{ pid: endorsePostData.pid, cid: cid }
+			);
+			assert.strictEqual(result.posts.endorsed, 0);
+		});
+
+		it('should reflect endorsed=1 in loadPostTools posts object after endorsing (button shows Unendorse)', async () => {
+			await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			const result = await socketPosts.loadPostTools(
+				{ uid: endorseAdminUid },
+				{ pid: endorsePostData.pid, cid: cid }
+			);
+			assert.strictEqual(result.posts.endorsed, 1);
+		});
+
+		it('should reflect endorsed=0 in loadPostTools posts object after unendorsing (button shows Endorse)', async () => {
+			await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			const result = await socketPosts.loadPostTools(
+				{ uid: endorseAdminUid },
+				{ pid: endorsePostData.pid, cid: cid }
+			);
+			assert.strictEqual(result.posts.endorsed, 0);
+		});
+
+		// --- data type integrity ---
+
+		it('should return endorsed as an integer from postsAPI.endorse', async () => {
+			const result = await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(typeof result.endorsed, 'number');
+			assert.strictEqual(result.endorsed, 1);
+		});
+
+		it('should return endorsed as an integer from postsAPI.unendorse', async () => {
+			const result = await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(typeof result.endorsed, 'number');
+			assert.strictEqual(result.endorsed, 0);
+		});
+
+		it('should return endorsed as an integer 0 from posts.getPostField for a newly created post', async () => {
+			const newPost = await topics.post({
+				uid: voteeUid,
+				cid: cid,
+				title: 'Post for getPostField integer type check',
+				content: 'Checking endorsed integer type from getPostField',
+			});
+			const endorsed = await posts.getPostField(newPost.postData.pid, 'endorsed');
+			assert.strictEqual(typeof endorsed, 'number');
+			assert.strictEqual(endorsed, 0);
+		});
+
+		// --- privilege management ---
+
+		it('should return false from privileges.global.can for user without endorse privilege', async () => {
+			const canEndorse = await privileges.global.can('posts:endorse', voterUid);
+			assert.strictEqual(canEndorse, false);
+		});
+
+		it('should return true from privileges.global.can for admin user', async () => {
+			const canEndorse = await privileges.global.can('posts:endorse', endorseAdminUid);
+			assert.strictEqual(canEndorse, true);
+		});
+
+		it('should allow endorsement when posts:endorse privilege is granted to a group, and prevent it when rescinded', async () => {
+			await privileges.global.give(['groups:posts:endorse'], 'registered-users');
+			// voterUid is in registered-users and can now endorse
+			const result = await apiPosts.endorse({ uid: voterUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(result.endorsed, 1);
+
+			await privileges.global.rescind(['groups:posts:endorse'], 'registered-users');
+			// After rescinding, voterUid can no longer endorse
+			await assert.rejects(
+				apiPosts.endorse({ uid: voterUid }, { pid: endorsePostData.pid }),
+				{ message: '[[error:no-privileges]]' }
+			);
+			// Restore state
+			await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+		});
+
+		// --- topics privilege includes posts:endorse ---
+
+		it('should include posts:endorse=true in topics privilege result for admin user', async () => {
+			const privs = await privileges.topics.get(endorsePostData.tid, endorseAdminUid);
+			assert.strictEqual(privs['posts:endorse'], true);
+		});
+
+		it('should include posts:endorse=false in topics privilege result for user without endorse privilege', async () => {
+			const privs = await privileges.topics.get(endorsePostData.tid, voterUid);
+			assert.strictEqual(privs['posts:endorse'], false);
+		});
+
+		// --- posts:endorse in global privilege list ---
+
+		it('should include posts:endorse in the global user privilege list', () => {
+			const privList = privileges.global.getUserPrivilegeList();
+			assert(privList.includes('posts:endorse'));
+		});
+
+		it('should include groups:posts:endorse in the global group privilege list', () => {
+			const privList = privileges.global.getGroupPrivilegeList();
+			assert(privList.includes('groups:posts:endorse'));
+		});
+
+		// --- idempotency ---
+
+		it('should be idempotent when endorsing an already-endorsed post', async () => {
+			await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			const result = await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(result.endorsed, 1);
+			const endorsed = await posts.getPostField(endorsePostData.pid, 'endorsed');
+			assert.strictEqual(endorsed, 1);
+		});
+
+		it('should be idempotent when unendorsing an already-unendorsed post', async () => {
+			await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			const result = await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
+			assert.strictEqual(result.endorsed, 0);
+			const endorsed = await posts.getPostField(endorsePostData.pid, 'endorsed');
+			assert.strictEqual(endorsed, 0);
+		});
 	});
 });
 
