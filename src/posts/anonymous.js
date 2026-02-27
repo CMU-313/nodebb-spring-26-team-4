@@ -27,7 +27,7 @@ function getAnonymousUserData(displayname = 'Anonymous') {
 		uid: 0,
 		username: 'Anonymous',
 		userslug: '',
-		picture: '',
+		picture: '/assets/uploads/system/anonymous-avatar.png',
 		'icon:text': 'A',
 		'icon:bgColor': '#999',
 		displayname,
