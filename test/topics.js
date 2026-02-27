@@ -93,6 +93,25 @@ describe('Topic\'s', () => {
 			assert.equal(data.tid, topic.tid);
 		});
 
+		it('should include poster groupTitle in topics list payload', async () => {
+			const groupName = 'Topic List Label Group';
+			const labelUserUid = await User.create({ username: 'topiclabeluser' });
+			await groups.create({ name: groupName, userTitle: groupName });
+			await groups.join(groupName, labelUserUid);
+
+			const result = await topics.post({
+				uid: labelUserUid,
+				title: 'Topic with group title',
+				content: 'Checking group title in topic list payload',
+				cid: topic.categoryId,
+			});
+			const topicsData = await topics.getTopics([result.topicData.tid], { uid: adminUid });
+
+			assert.strictEqual(topicsData.length, 1);
+			assert.strictEqual(topicsData[0].user.username, 'topiclabeluser');
+			assert(String(topicsData[0].user.groupTitle).includes(groupName));
+		});
+
 		it('should fail to create new topic with invalid user id', (done) => {
 			topics.post({ uid: null, title: topic.title, content: topic.content, cid: topic.categoryId }, (err) => {
 				assert.equal(err.message, '[[error:no-privileges]]');

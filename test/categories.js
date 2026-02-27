@@ -774,6 +774,43 @@ describe('Categories', () => {
 			});
 		});
 
+		it('should configure instructor moderation privileges used by the instructors feature', async () => {
+			const instructorPrivileges = [
+				'groups:topics:create',
+				'groups:topics:read',
+				'groups:topics:schedule',
+				'groups:topics:tag',
+				'groups:topics:delete',
+				'groups:posts:view_deleted',
+				'groups:posts:edit',
+				'groups:posts:delete',
+				'groups:purge',
+				'groups:topics:move',
+			];
+			const exists = await groups.exists('Instructors');
+			if (!exists) {
+				await groups.create({
+					name: 'Instructors',
+					userTitle: 'Instructor',
+					description: 'Group for course instructors',
+					hidden: 0,
+					private: 1,
+					disableJoinRequests: 1,
+				});
+			}
+
+			await privileges.categories.give(instructorPrivileges, -1, ['Instructors']);
+			await privileges.global.give(['groups:ban', 'groups:posts:endorse'], 'Instructors');
+
+			const globalPrivileges = await privileges.global.groupPrivileges('Instructors');
+			assert.strictEqual(globalPrivileges['groups:ban'], true);
+			assert.strictEqual(globalPrivileges['groups:posts:endorse'], true);
+
+			const categoryPrivileges = await privileges.categories.groupPrivileges(-1, 'Instructors');
+			assert.strictEqual(categoryPrivileges['groups:topics:delete'], true);
+			assert.strictEqual(categoryPrivileges['groups:posts:view_deleted'], true);
+		});
+
 		it('should return false if cid is falsy', (done) => {
 			privileges.categories.isUserAllowedTo('find', null, adminUid, (err, isAllowed) => {
 				assert.ifError(err);

@@ -934,6 +934,115 @@ describe('Post\'s', () => {
 		});
 	});
 
+	describe('anonymous posting', () => {
+		let anonUid1;
+		let anonUid2;
+		let anonTopic;
+		let anonReply1;
+		let anonReply2;
+		let anonReply3;
+		let modJar;
+
+		before(async () => {
+			({ jar: modJar } = await helpers.loginUser('globalmod', 'globalmodpwd'));
+			anonUid1 = await user.create({ username: 'anonposter1' });
+			anonUid2 = await user.create({ username: 'anonposter2' });
+
+			anonTopic = await apiTopics.create(
+				{ uid: anonUid1 },
+				{
+					title: 'anonymous topic',
+					content: 'anonymous topic content',
+					cid: cid,
+					isAnonymous: true,
+				}
+			);
+
+			anonReply1 = await apiTopics.reply(
+				{ uid: anonUid1 },
+				{
+					tid: anonTopic.tid,
+					content: 'anonymous reply one',
+					isAnonymous: true,
+				}
+			);
+			anonReply2 = await apiTopics.reply(
+				{ uid: anonUid1 },
+				{
+					tid: anonTopic.tid,
+					content: 'anonymous reply two',
+					isAnonymous: true,
+				}
+			);
+			anonReply3 = await apiTopics.reply(
+				{ uid: anonUid2 },
+				{
+					tid: anonTopic.tid,
+					content: 'anonymous reply three',
+					isAnonymous: true,
+				}
+			);
+		});
+
+		it('should create anonymous posts and keep identidies hidden', async () => {
+			const [reply1Data, reply2Data, reply3Data] = await Promise.all([
+				posts.getPostFields(anonReply1.pid, ['uid', 'tid', 'isAnonymous', 'realUid', 'anonymousAliasId']),
+				posts.getPostFields(anonReply2.pid, ['uid', 'tid', 'isAnonymous', 'realUid', 'anonymousAliasId']),
+				posts.getPostFields(anonReply3.pid, ['uid', 'tid', 'isAnonymous', 'realUid', 'anonymousAliasId']),
+			]);
+
+			assert.strictEqual(reply1Data.uid, 0);
+			assert.strictEqual(reply1Data.isAnonymous, 1);
+			assert.strictEqual(reply1Data.realUid, anonUid1);
+			assert(reply1Data.anonymousAliasId > 0);
+
+			assert.strictEqual(reply2Data.uid, 0);
+			assert.strictEqual(reply2Data.isAnonymous, 1);
+			assert.strictEqual(reply2Data.realUid, anonUid1);
+			assert.strictEqual(reply1Data.anonymousAliasId, reply2Data.anonymousAliasId);
+
+			assert.strictEqual(reply3Data.uid, 0);
+			assert.strictEqual(reply3Data.isAnonymous, 1);
+			assert.strictEqual(reply3Data.realUid, anonUid2);
+			assert.notStrictEqual(reply1Data.anonymousAliasId, reply3Data.anonymousAliasId);
+			assert.strictEqual(reply1Data.tid, reply3Data.tid);
+		});
+
+		it('should show aliases in topic with generic anonymous profile data', async () => {
+			const { body } = await request.get(`${nconf.get('url')}/api/topic/${anonTopic.slug}`, { jar: modJar });
+			assert(Array.isArray(body.posts));
+			const byPid = new Map(body.posts.map(post => [post.pid, post]));
+
+			const topicMain = byPid.get(anonTopic.mainPid);
+			const reply1 = byPid.get(anonReply1.pid);
+			const reply2 = byPid.get(anonReply2.pid);
+			const reply3 = byPid.get(anonReply3.pid);
+
+			assert.strictEqual(topicMain.user.displayname.startsWith('Anonymous '), true);
+			assert.strictEqual(reply1.user.displayname.startsWith('Anonymous '), true);
+			assert.strictEqual(reply1.user.displayname, reply2.user.displayname);
+			assert.notStrictEqual(reply1.user.displayname, reply3.user.displayname);
+
+			assert.strictEqual(reply1.user.username, 'Anonymous');
+			assert.strictEqual(reply1.user.userslug, '');
+			assert.strictEqual(reply1.user.picture, '/assets/uploads/system/anonymous-avatar.png');
+		});
+
+		it('should return plain Anonymous in post and summary APIs and hide realUid', async () => {
+			const postData = await apiPosts.get({ uid: anonUid1 }, { pid: anonReply1.pid });
+			assert.strictEqual(postData.user.displayname, 'Anonymous');
+			assert.strictEqual(postData.user.username, 'Anonymous');
+			assert.strictEqual(postData.user.userslug, '');
+			assert.strictEqual(postData.realUid, undefined);
+
+			const summary = await apiPosts.getSummary({ uid: anonUid1 }, { pid: anonReply1.pid });
+			assert.strictEqual(summary.user.displayname, 'Anonymous');
+			assert.strictEqual(summary.user.username, 'Anonymous');
+			assert.strictEqual(summary.user.userslug, '');
+			assert.strictEqual(summary.realUid, undefined);
+		});
+	});
+
 	it('should error if user does not exist', (done) => {
 		user.isReadyToPost(21123123, 1, (err) => {
 			assert.equal(err.message, '[[error:no-user]]');
