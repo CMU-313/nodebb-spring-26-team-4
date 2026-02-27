@@ -1260,13 +1260,39 @@ describe('Post\'s', () => {
 		});
 	});
 
+	/**
+	 * Test suite for the post endorsement feature.
+	 *
+	 * The endorsement feature lets privileged users (those holding the global
+	 * `posts:endorse` permission, e.g. Instructors and Administrators) mark a
+	 * post as "endorsed".  The endorsed state is stored as an integer field on
+	 * the post (0 = not endorsed, 1 = endorsed) and is surfaced to the client
+	 * through both the REST API (PUT/DELETE /api/v3/posts/:pid/endorse) and the
+	 * socket.io `loadPostTools` event.
+	 *
+	 * Setup
+	 * -----
+	 * `endorseAdminUid`  – a freshly created user joined to the administrators
+	 *                      group so that all global privileges are automatically
+	 *                      granted, including `posts:endorse`.
+	 * `endorsePostData`  – a dedicated topic + first post used as the target for
+	 *                      all endorsement operations, keeping state isolated from
+	 *                      the rest of the suite.
+	 * `voterUid`         – a plain registered user (no endorse privilege) reused
+	 *                      from the outer describe scope to test access denial.
+	 */
 	describe('endorsement', () => {
 		let endorseAdminUid;
 		let endorsePostData;
 
 		before(async () => {
+			// Create a user with administrator rights so they hold the
+			// posts:endorse global privilege without any extra setup.
 			endorseAdminUid = await user.create({ username: 'endorseAdmin' });
 			await groups.join('administrators', endorseAdminUid);
+
+			// Create a dedicated post to use as the endorsement target
+			// throughout the suite, avoiding interference with other tests.
 			const result = await topics.post({
 				uid: voteeUid,
 				cid: cid,
@@ -1276,6 +1302,15 @@ describe('Post\'s', () => {
 			endorsePostData = result.postData;
 		});
 
+		// -------------------------------------------------------------------------
+		// Input validation — postsAPI.endorse
+		// -------------------------------------------------------------------------
+		// postsAPI.endorse must reject calls that omit required fields before
+		// performing any database or privilege work.
+
+		// Verifies the null-data guard at the top of postsAPI.endorse.
+		// Passing null instead of a data object must immediately throw
+		// [[error:invalid-data]] without touching the database.
 		it('should throw invalid-data error if data is null when endorsing', async () => {
 			await assert.rejects(
 				apiPosts.endorse({ uid: endorseAdminUid }, null),
@@ -1283,6 +1318,9 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// Verifies the missing-pid guard in postsAPI.endorse.
+		// An empty object (no pid property) is structurally invalid and must
+		// throw [[error:invalid-data]] before any privilege check is attempted.
 		it('should throw invalid-data error if pid is missing when endorsing', async () => {
 			await assert.rejects(
 				apiPosts.endorse({ uid: endorseAdminUid }, {}),
@@ -1290,6 +1328,15 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// -------------------------------------------------------------------------
+		// Privilege enforcement — postsAPI.endorse
+		// -------------------------------------------------------------------------
+		// The posts:endorse privilege is a global (non-category) permission.
+		// Regular registered users do not hold it by default.
+
+		// Verifies that postsAPI.endorse rejects callers who lack the global
+		// posts:endorse privilege.  voterUid is a plain registered user with no
+		// special permissions.
 		it('should throw no-privileges error for user without endorse privilege', async () => {
 			await assert.rejects(
 				apiPosts.endorse({ uid: voterUid }, { pid: endorsePostData.pid }),
@@ -1297,6 +1344,13 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// -------------------------------------------------------------------------
+		// Post existence validation — postsAPI.endorse
+		// -------------------------------------------------------------------------
+
+		// Verifies that postsAPI.endorse checks whether the target post exists
+		// before writing to the database.  pid 99999 is guaranteed not to exist
+		// in the test environment.
 		it('should throw invalid-pid error if post does not exist when endorsing', async () => {
 			await assert.rejects(
 				apiPosts.endorse({ uid: endorseAdminUid }, { pid: 99999 }),
@@ -1304,6 +1358,14 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// -------------------------------------------------------------------------
+		// Functional correctness — postsAPI.endorse
+		// -------------------------------------------------------------------------
+
+		// Verifies the full happy path for endorsing a post:
+		// - The return value includes the correct pid and endorsed=1.
+		// - The endorsed field is actually persisted to the database so that
+		//   subsequent reads reflect the new state.
 		it('should endorse a post and return endorsed status 1', async () => {
 			const result = await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			assert.strictEqual(result.pid, endorsePostData.pid);
@@ -1312,6 +1374,13 @@ describe('Post\'s', () => {
 			assert.strictEqual(endorsed, 1);
 		});
 
+		// -------------------------------------------------------------------------
+		// Input validation — postsAPI.unendorse
+		// -------------------------------------------------------------------------
+		// Mirror of the endorse input-validation tests: unendorse must apply the
+		// same guards before performing any database or privilege work.
+
+		// Verifies the null-data guard in postsAPI.unendorse.
 		it('should throw invalid-data error if data is null when unendorsing', async () => {
 			await assert.rejects(
 				apiPosts.unendorse({ uid: endorseAdminUid }, null),
@@ -1319,6 +1388,7 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// Verifies the missing-pid guard in postsAPI.unendorse.
 		it('should throw invalid-data error if pid is missing when unendorsing', async () => {
 			await assert.rejects(
 				apiPosts.unendorse({ uid: endorseAdminUid }, {}),
@@ -1326,6 +1396,12 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// -------------------------------------------------------------------------
+		// Privilege enforcement — postsAPI.unendorse
+		// -------------------------------------------------------------------------
+
+		// Verifies that postsAPI.unendorse also requires the posts:endorse
+		// privilege — the same permission gates both directions of the toggle.
 		it('should throw no-privileges error for user without endorse privilege when unendorsing', async () => {
 			await assert.rejects(
 				apiPosts.unendorse({ uid: voterUid }, { pid: endorsePostData.pid }),
@@ -1333,6 +1409,12 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// -------------------------------------------------------------------------
+		// Post existence validation — postsAPI.unendorse
+		// -------------------------------------------------------------------------
+
+		// Verifies that postsAPI.unendorse rejects a non-existent pid with
+		// [[error:invalid-pid]], consistent with the endorse direction.
 		it('should throw invalid-pid error if post does not exist when unendorsing', async () => {
 			await assert.rejects(
 				apiPosts.unendorse({ uid: endorseAdminUid }, { pid: 99999 }),
@@ -1340,6 +1422,16 @@ describe('Post\'s', () => {
 			);
 		});
 
+		// -------------------------------------------------------------------------
+		// Functional correctness — postsAPI.unendorse
+		// -------------------------------------------------------------------------
+
+		// Verifies the full happy path for unendorsing a post:
+		// - The return value includes the correct pid and endorsed=0.
+		// - The endorsed field is persisted to the database as 0 so that
+		//   subsequent reads confirm the post is no longer endorsed.
+		// NOTE: endorsePostData was endorsed by the test above; this test
+		// intentionally depends on that prior state to exercise the transition.
 		it('should unendorse a post and return endorsed status 0', async () => {
 			const result = await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			assert.strictEqual(result.pid, endorsePostData.pid);
@@ -1348,6 +1440,13 @@ describe('Post\'s', () => {
 			assert.strictEqual(endorsed, 0);
 		});
 
+		// -------------------------------------------------------------------------
+		// Default state on post creation
+		// -------------------------------------------------------------------------
+
+		// Verifies that posts/create.js initialises the endorsed field to 0 for
+		// every new post.  No explicit endorsement action should be needed to
+		// establish this baseline state.
 		it('should create posts with endorsed field set to 0 by default', async () => {
 			const result = await topics.post({
 				uid: voteeUid,
@@ -1359,6 +1458,15 @@ describe('Post\'s', () => {
 			assert.strictEqual(endorsed, 0);
 		});
 
+		// -------------------------------------------------------------------------
+		// socketPosts.loadPostTools — display_endorse_tools flag
+		// -------------------------------------------------------------------------
+		// loadPostTools is called by the client each time the post action menu is
+		// opened.  It must set display_endorse_tools so that the template knows
+		// whether to render the Endorse/Unendorse menu item at all.
+
+		// Verifies that display_endorse_tools is true for a user who holds the
+		// posts:endorse privilege, so the endorse menu item is rendered.
 		it('should show endorse tools for users with endorse privilege', async () => {
 			const result = await socketPosts.loadPostTools(
 				{ uid: endorseAdminUid },
@@ -1367,6 +1475,8 @@ describe('Post\'s', () => {
 			assert.strictEqual(result.posts.display_endorse_tools, true);
 		});
 
+		// Verifies that display_endorse_tools is false for a user who does not
+		// hold the posts:endorse privilege, so the menu item is hidden entirely.
 		it('should not show endorse tools for users without endorse privilege', async () => {
 			const result = await socketPosts.loadPostTools(
 				{ uid: voterUid },
@@ -1375,8 +1485,19 @@ describe('Post\'s', () => {
 			assert.strictEqual(result.posts.display_endorse_tools, false);
 		});
 
-		// --- endorsed field loaded on post load ---
+		// -------------------------------------------------------------------------
+		// Endorsed field loaded on post load (loadPostTools)
+		// -------------------------------------------------------------------------
+		// loadPostTools explicitly fetches the endorsed field from the database
+		// and includes it in the posts object it returns.  The client template
+		// reads posts.endorsed to decide which button label to show:
+		//   endorsed=0  →  menu item reads "Endorse"
+		//   endorsed=1  →  menu item reads "Unendorse"
+		// These tests confirm the server sends the correct value at each stage.
 
+		// Verifies that loadPostTools exposes the endorsed field and that its
+		// value is 0 when the post has not been endorsed.
+		// (endorsePostData is in the unendorsed state after the tests above.)
 		it('should include endorsed field in loadPostTools posts object (default 0)', async () => {
 			// After previous tests, endorsePostData is in unendorsed state
 			const result = await socketPosts.loadPostTools(
@@ -1386,6 +1507,9 @@ describe('Post\'s', () => {
 			assert.strictEqual(result.posts.endorsed, 0);
 		});
 
+		// Verifies that after endorsing, loadPostTools returns endorsed=1 in the
+		// posts object — the value that causes the client template to render the
+		// menu item as "Unendorse" and show the endorsed indicator badge.
 		it('should reflect endorsed=1 in loadPostTools posts object after endorsing (button shows Unendorse)', async () => {
 			await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			const result = await socketPosts.loadPostTools(
@@ -1395,6 +1519,9 @@ describe('Post\'s', () => {
 			assert.strictEqual(result.posts.endorsed, 1);
 		});
 
+		// Verifies that after unendorsing, loadPostTools returns endorsed=0 —
+		// causing the client template to render the menu item as "Endorse" and
+		// hide the endorsed indicator badge.
 		it('should reflect endorsed=0 in loadPostTools posts object after unendorsing (button shows Endorse)', async () => {
 			await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			const result = await socketPosts.loadPostTools(
@@ -1404,20 +1531,32 @@ describe('Post\'s', () => {
 			assert.strictEqual(result.posts.endorsed, 0);
 		});
 
-		// --- data type integrity ---
+		// -------------------------------------------------------------------------
+		// Data type integrity
+		// -------------------------------------------------------------------------
+		// The endorsed field is declared in posts/data.js intFields, which means
+		// the database layer must parse it as a JavaScript Number.  If it were
+		// returned as a string, strict equality checks in the client and server
+		// could silently pass or fail in unexpected ways.
 
+		// Verifies that postsAPI.endorse returns endorsed as a Number, not a
+		// string, confirming the intFields parsing is applied on the write path.
 		it('should return endorsed as an integer from postsAPI.endorse', async () => {
 			const result = await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			assert.strictEqual(typeof result.endorsed, 'number');
 			assert.strictEqual(result.endorsed, 1);
 		});
 
+		// Verifies that postsAPI.unendorse likewise returns endorsed as a Number.
 		it('should return endorsed as an integer from postsAPI.unendorse', async () => {
 			const result = await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			assert.strictEqual(typeof result.endorsed, 'number');
 			assert.strictEqual(result.endorsed, 0);
 		});
 
+		// Verifies that posts.getPostField returns the endorsed value as a Number
+		// when reading it back directly from the database layer, confirming the
+		// intFields coercion applies to all read paths, not just the API layer.
 		it('should return endorsed as an integer 0 from posts.getPostField for a newly created post', async () => {
 			const newPost = await topics.post({
 				uid: voteeUid,
@@ -1430,60 +1569,103 @@ describe('Post\'s', () => {
 			assert.strictEqual(endorsed, 0);
 		});
 
-		// --- privilege management ---
+		// -------------------------------------------------------------------------
+		// Privilege management
+		// -------------------------------------------------------------------------
+		// These tests exercise the privilege system directly to confirm that
+		// granting and revoking the posts:endorse privilege has the expected
+		// effect on what users are allowed to do.
 
+		// Verifies that privileges.global.can returns false for a plain registered
+		// user who has not been granted the posts:endorse privilege.
 		it('should return false from privileges.global.can for user without endorse privilege', async () => {
 			const canEndorse = await privileges.global.can('posts:endorse', voterUid);
 			assert.strictEqual(canEndorse, false);
 		});
 
+		// Verifies that privileges.global.can returns true for an administrator,
+		// confirming that the admin shortcut in privsGlobal.can works correctly
+		// for the posts:endorse privilege specifically.
 		it('should return true from privileges.global.can for admin user', async () => {
 			const canEndorse = await privileges.global.can('posts:endorse', endorseAdminUid);
 			assert.strictEqual(canEndorse, true);
 		});
 
+		// Verifies that privileges.global.give grants the posts:endorse privilege
+		// to every member of the specified group, and that privileges.global.rescind
+		// removes it again.  This exercises the give→use→rescind→deny cycle that
+		// the Instructors group setup relies on during installation.
 		it('should allow endorsement when posts:endorse privilege is granted to a group, and prevent it when rescinded', async () => {
+			// Grant group-level endorse privilege to all registered users.
 			await privileges.global.give(['groups:posts:endorse'], 'registered-users');
 			// voterUid is in registered-users and can now endorse
 			const result = await apiPosts.endorse({ uid: voterUid }, { pid: endorsePostData.pid });
 			assert.strictEqual(result.endorsed, 1);
 
+			// Rescind the privilege and confirm the same user is blocked.
 			await privileges.global.rescind(['groups:posts:endorse'], 'registered-users');
 			// After rescinding, voterUid can no longer endorse
 			await assert.rejects(
 				apiPosts.endorse({ uid: voterUid }, { pid: endorsePostData.pid }),
 				{ message: '[[error:no-privileges]]' }
 			);
-			// Restore state
+			// Restore state for subsequent tests.
 			await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 		});
 
-		// --- topics privilege includes posts:endorse ---
+		// -------------------------------------------------------------------------
+		// Topics privilege object — posts:endorse field
+		// -------------------------------------------------------------------------
+		// privileges.topics.get aggregates all per-topic privilege flags into a
+		// single object consumed by the client.  It includes posts:endorse by
+		// delegating to privileges.global.can internally.
 
+		// Verifies that the object returned by privileges.topics.get includes
+		// posts:endorse=true when the caller is an administrator.
 		it('should include posts:endorse=true in topics privilege result for admin user', async () => {
 			const privs = await privileges.topics.get(endorsePostData.tid, endorseAdminUid);
 			assert.strictEqual(privs['posts:endorse'], true);
 		});
 
+		// Verifies that the object returned by privileges.topics.get includes
+		// posts:endorse=false for a user who does not hold the privilege.
 		it('should include posts:endorse=false in topics privilege result for user without endorse privilege', async () => {
 			const privs = await privileges.topics.get(endorsePostData.tid, voterUid);
 			assert.strictEqual(privs['posts:endorse'], false);
 		});
 
-		// --- posts:endorse in global privilege list ---
+		// -------------------------------------------------------------------------
+		// Global privilege lists — registration of posts:endorse
+		// -------------------------------------------------------------------------
+		// The privilege must be registered in the global privilege map so that the
+		// admin UI can display it and so that give/rescind operations can target it
+		// by name.
 
+		// Verifies that posts:endorse appears in the user-level privilege list
+		// returned by privileges.global.getUserPrivilegeList, confirming it is
+		// registered in the _privilegeMap in src/privileges/global.js.
 		it('should include posts:endorse in the global user privilege list', () => {
 			const privList = privileges.global.getUserPrivilegeList();
 			assert(privList.includes('posts:endorse'));
 		});
 
+		// Verifies that groups:posts:endorse (the group-level counterpart) appears
+		// in the list returned by privileges.global.getGroupPrivilegeList, which
+		// is derived automatically from the same _privilegeMap entries.
 		it('should include groups:posts:endorse in the global group privilege list', () => {
 			const privList = privileges.global.getGroupPrivilegeList();
 			assert(privList.includes('groups:posts:endorse'));
 		});
 
-		// --- idempotency ---
+		// -------------------------------------------------------------------------
+		// Idempotency
+		// -------------------------------------------------------------------------
+		// Endorsing or unendorsing a post that is already in the target state
+		// should succeed silently and leave the field at the expected value.
+		// This matches the behaviour of similar toggle operations (e.g. bookmarks).
 
+		// Verifies that calling endorse twice in a row does not corrupt state:
+		// the second call should overwrite endorsed=1 with endorsed=1 cleanly.
 		it('should be idempotent when endorsing an already-endorsed post', async () => {
 			await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			const result = await apiPosts.endorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
@@ -1492,6 +1674,8 @@ describe('Post\'s', () => {
 			assert.strictEqual(endorsed, 1);
 		});
 
+		// Verifies that calling unendorse twice in a row does not corrupt state:
+		// the second call should overwrite endorsed=0 with endorsed=0 cleanly.
 		it('should be idempotent when unendorsing an already-unendorsed post', async () => {
 			await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
 			const result = await apiPosts.unendorse({ uid: endorseAdminUid }, { pid: endorsePostData.pid });
