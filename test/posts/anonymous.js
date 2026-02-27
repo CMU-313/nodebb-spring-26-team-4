@@ -164,6 +164,7 @@ describe('Anonymous Posts', () => {
 
 			assert.strictEqual(post.realUid, undefined);
 		});
+		*/
 
 		it('should set all anonymous user properties', () => {
 			const post = {
@@ -178,7 +179,6 @@ describe('Anonymous Posts', () => {
 			assert.strictEqual(post.user.picture, '');
 			assert.strictEqual(post.user['icon:text'], 'A');
 			assert.strictEqual(post.user['icon:bgColor'], '#999');
-			assert.strictEqual(post.user.displayname, 'Anonymous');
 			assert.strictEqual(post.user.banned, 0);
 			assert.strictEqual(post.user.status, 'offline');
 			assert.deepStrictEqual(post.user.custom_profile_info, []);

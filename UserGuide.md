@@ -1,6 +1,12 @@
-# Anonymous Post Feature - User Guide
+# User Guide
 
-## Feature Overview
+Our team has implemented 3 major features that improve course management system for instructors and facilitate the Q&A between the instructors and students. They are
+
+1. Instructor group
+2. Anonymous Post
+3. Instructor-endorsed answers
+
+## 2. Anonymous Post - Feature Overview
 
 The Anonymous Post feature allows registered users to create posts and replies without revealing their identity. When posting anonymously:
 
@@ -10,9 +16,9 @@ The Anonymous Post feature allows registered users to create posts and replies w
 
 ---
 
-## How to Use the Anonymous Post Feature
+### How to Use the Anonymous Post Feature
 
-### Creating an Anonymous Topic
+#### Creating an Anonymous Topic
 
 1. Navigate to any category and click **New Topic**
 2. In the composer, enable the **Post Anonymously** option (only available to logged-in users)
@@ -20,7 +26,7 @@ The Anonymous Post feature allows registered users to create posts and replies w
 
 Your topic will display as authored by "Anonymous." Your actual username will not be visible to other users, but your post count will still increment.
 
-### Creating an Anonymous Reply
+#### Creating an Anonymous Reply
 
 1. Open an existing topic and click **Reply**
 2. Enable the **Post Anonymously** option in the composer
@@ -30,36 +36,36 @@ Your reply will appear as authored by "Anonymous" with full standard functionali
 
 ---
 
-## User Testing Guide
+### User Testing Guide
 
-### Test 1: Create Anonymous Topic
+#### Test 1: Create Anonymous Topic
 1. Log in and navigate to any category
 2. Click **New Topic**, enable the anonymous option, and submit a post
 3. **Expected:** Topic displays with author "Anonymous" and a generic avatar; your profile post count increments
 
-### Test 2: Create Anonymous Reply
+#### Test 2: Create Anonymous Reply
 1. Log in and open any existing topic
 2. Click **Reply**, enable the anonymous option, and submit
 3. **Expected:** Reply displays as "Anonymous"; threading and timestamp are correct
 
-### Test 3: Non-Anonymous Post Still Works
+#### Test 3: Non-Anonymous Post Still Works
 1. Log in and create a topic or reply without enabling the anonymous option
 2. **Expected:** Post displays with your real username and avatar as normal
 
-### Test 4: Guest Cannot Post Anonymously
+#### Test 4: Guest Cannot Post Anonymously
 1. Log out and navigate to any topic
 2. **Expected:** The anonymous posting option is not available to guests
 
-### Edge Cases to Verify
+#### Edge Cases to Verify
 - Editing an anonymous post should leave it displayed as "Anonymous"
 - Moderators can view the real author via the preserved `realUid` field
 - Anonymous posts appear in search results with "Anonymous" as the author
 
 ---
 
-## Automated Test Documentation
+### Automated Test Documentation
 
-### Test File Location
+#### Test File Location
 
 [`test/posts/anonymous.js`](test/posts/anonymous.js)
 [`test/posts.js`](test/posts.js)
@@ -74,7 +80,7 @@ AND
 npm test test/posts.js
 ```
 
-### What Is Being Tested
+#### What Is Being Tested
 
 The automated tests cover both helper-level behavior and integration behavior for anonymous posting.
 
