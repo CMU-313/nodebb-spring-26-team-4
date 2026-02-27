@@ -5,6 +5,7 @@ Our team has implemented major features that improve course management for instr
 1. Instructor group
 2. Anonymous Post
 3. Group visibility enhancements
+4. Instructor-endorsed Answers
 
 ---
 
@@ -334,3 +335,29 @@ npm test test/topics.js
 - **Direct payload validation:** Tests assert the exact API fields consumed by the UI for both ACP users table and topic lists.
 - **Positive and negative checks:** They verify expected inclusion (custom groups and titles) and exclusion (`registered-users`), reducing false confidence from one-sided assertions.
 - **Integration-level confidence:** Coverage spans controller/API output and topic retrieval flow, which are the main surfaces affected by the feature changes.
+
+---
+
+## 4. Instructor-endorsed answers
+
+This feature allows instructors, or anyone with the endorse privilege, to endorse certain posts. Under the endorsed posts, a message will be displayed in green, to denote that the post is endorsed.
+
+### How to use this feature
+
+If you have the endorse privilege, in the post dropdown menu, you should see the "endorse post" button pop up. Click it to endorse a post. If the post is already endorsed, the button will become "unendorse post" so that you can cancel your endorsement. The post dropdown menu is located at the 3 dots at the bottom right corner of every post.
+
+### Testing Guide
+
+Users with the endorse privilege can repeat the steps above to ensure that this feature is working properly. After clicking the endorse button, if the green message "The post is endorsed by an instructor" appears under the post content, then the endorsement is successful. Clicking "unendorse post" would make the message disappear.
+
+### Automated Tests
+
+The automated tests for this feature are all located in [`test/posts.js`](test/posts.js). You can run them by running the command
+```bash
+npm run test test/posts.js
+```
+in the terminal.
+
+The tests comprehensively test that every post is associated with the endorse field, and that the functions reading the fields, like loadPostTools() and functions modifying the field, like the API calls, are working correctly. Th  tests also checks the privilege system to eusure that only users with the privilege can endorse, and that the privilege can be granted like all other global privileges.
+
+The tests should be comprehensive because they check all the intended and unintended usages of the functions, and verify that they are all handled properly. Almost all lines involved in implementing this functionality has been checked by the tests. This high coverage ensures that all code has been tested.
