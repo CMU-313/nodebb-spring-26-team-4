@@ -214,6 +214,8 @@ plugin.filterComposerBuild = async function (hookData) {
 
 			isTopic: !!req.query.cid,
 			isEditing: isEditing,
+			showAnonymousToggle: req.uid > 0 && !isEditing,
+			isAnonymous: postData ? !!postData.isAnonymous : false,
 			canSchedule: canScheduleTopics,
 			showHandleInput: meta.config.allowGuestHandles === 1 &&
 				(req.uid === 0 || (isEditing && isGuestPost && (isAdmin || isMod))),

@@ -13,6 +13,7 @@ const activitypub = require('../activitypub');
 const plugins = require('../plugins');
 const utils = require('../utils');
 const privileges = require('../privileges');
+const anonymous = require('../posts/anonymous');
 
 const backlinkRegex = new RegExp(`(?:${nconf.get('url').replace('/', '\\/')}|\b|\\s)\\/topic\\/(\\d+)(?:\\/\\w+)?`, 'g');
 
@@ -142,15 +143,20 @@ module.exports = function (Topics) {
 				postObj.downvoted = voteData.downvotes[i];
 				postObj.votes = postObj.votes || 0;
 				postObj.replies = replies[i];
-				postObj.selfPost = parseInt(uid, 10) > 0 && parseInt(uid, 10) === postObj.uid;
+				postObj.selfPost = parseInt(uid, 10) > 0 && (
+					parseInt(uid, 10) === postObj.uid ||
+					(anonymous.isAnonymousPost(postObj) && parseInt(uid, 10) === parseInt(postObj.realUid, 10))
+				);
 
 				// Username override for guests, if enabled
 				if (meta.config.allowGuestHandles && postObj.uid === 0 && postObj.handle) {
 					postObj.user.username = validator.escape(String(postObj.handle));
 					postObj.user.displayname = postObj.user.username;
 				}
-				//Override user display for anonymous posts
-				require('../posts/anonymous').overrideUserDisplay(postObj);
+				if (anonymous.isAnonymousPost(postObj)) {
+					anonymous.overrideUserDisplay(postObj, { useThreadAlias: true });
+					delete postObj.realUid;
+				}
 			}
 		});
 
@@ -195,7 +201,7 @@ module.exports = function (Topics) {
 		const pidToPrivs = _.zipObject(parentPids, postPrivileges);
 
 		parentPids = parentPids.filter(p => pidToPrivs[p]['topics:read']);
-		const parentPosts = await posts.getPostsFields(parentPids, ['uid', 'pid', 'timestamp', 'content', 'sourceContent', 'deleted']);
+		const parentPosts = await posts.getPostsFields(parentPids, ['uid', 'pid', 'tid', 'timestamp', 'content', 'sourceContent', 'deleted', 'isAnonymous', 'realUid', 'anonymousAliasId']);
 		const parentUids = _.uniq(parentPosts.map(postObj => postObj && postObj.uid));
 		const userData = await user.getUsersFields(parentUids, ['username', 'userslug', 'picture']);
 
@@ -218,11 +224,29 @@ module.exports = function (Topics) {
 		const parents = {};
 		parentPosts.forEach((post, i) => {
 			if (usersMap[post.uid]) {
+				const parentUser = { ...usersMap[post.uid] };
+				if (anonymous.isAnonymousPost(post)) {
+					const anonParent = { ...post, user: parentUser };
+					anonymous.overrideUserDisplay(anonParent, { useThreadAlias: true });
+					delete anonParent.realUid;
+					parents[parentPids[i]] = {
+						uid: post.uid,
+						pid: post.pid,
+						content: post.content,
+						user: anonParent.user,
+						isAnonymous: post.isAnonymous,
+						timestamp: post.timestamp,
+						timestampISO: post.timestampISO,
+					};
+					return;
+				}
+
 				parents[parentPids[i]] = {
 					uid: post.uid,
 					pid: post.pid,
 					content: post.content,
-					user: usersMap[post.uid],
+					user: parentUser,
+					isAnonymous: post.isAnonymous,
 					timestamp: post.timestamp,
 					timestampISO: post.timestampISO,
 				};
@@ -369,20 +393,19 @@ module.exports = function (Topics) {
 
 		const uniquePids = _.uniq(_.flatten(arrayOfReplyPids));
 
-		let replyData = await posts.getPostsFields(uniquePids, ['pid', 'uid', 'timestamp']);
+		let replyData = await posts.getPostsFields(uniquePids, ['pid', 'uid', 'tid', 'timestamp', 'isAnonymous', 'realUid', 'anonymousAliasId']);
 		const result = await plugins.hooks.fire('filter:topics.getPostReplies', {
 			uid: callerUid,
 			replies: replyData,
 		});
 		replyData = await user.blocks.filter(callerUid, result.replies);
-
-		const uids = replyData.map(replyData => replyData && replyData.uid);
-
-		const uniqueUids = _.uniq(uids);
-
-		const userData = await user.getUsersWithFields(uniqueUids, ['uid', 'username', 'userslug', 'picture'], callerUid);
-
-		const uidMap = _.zipObject(uniqueUids, userData);
+		const nonAnonymousUids = _.uniq(
+			replyData
+				.filter(reply => reply && !anonymous.isAnonymousPost(reply))
+				.map(reply => reply.uid)
+		);
+		const userData = await user.getUsersWithFields(nonAnonymousUids, ['uid', 'username', 'userslug', 'picture'], callerUid);
+		const uidMap = _.zipObject(nonAnonymousUids, userData);
 		const pidMap = _.zipObject(replyData.map(r => r.pid), replyData);
 		const postDataMap = _.zipObject(pids, postData);
 
@@ -403,9 +426,23 @@ module.exports = function (Topics) {
 
 			replyPids.forEach((replyPid) => {
 				const replyData = pidMap[replyPid];
-				if (!uidsUsed[replyData.uid] && currentData.users.length < 6) {
-					currentData.users.push(uidMap[replyData.uid]);
-					uidsUsed[replyData.uid] = true;
+				if (!replyData) {
+					return;
+				}
+
+				const identityKey = anonymous.isAnonymousPost(replyData) ?
+					`anon:${replyData.tid}:${replyData.anonymousAliasId || replyData.realUid || replyData.pid}` :
+					`uid:${replyData.uid}`;
+				if (!uidsUsed[identityKey] && currentData.users.length < 6) {
+					if (anonymous.isAnonymousPost(replyData)) {
+						const anonReply = { ...replyData };
+						anonymous.overrideUserDisplay(anonReply, { useThreadAlias: true });
+						currentData.users.push(anonReply.user);
+						uidsUsed[identityKey] = true;
+					} else if (uidMap[replyData.uid]) {
+						currentData.users.push(uidMap[replyData.uid]);
+						uidsUsed[identityKey] = true;
+					}
 				}
 			});
 

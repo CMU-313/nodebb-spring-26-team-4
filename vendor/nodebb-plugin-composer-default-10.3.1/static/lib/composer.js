@@ -202,6 +202,7 @@ define('composer', [
 			body: data.body || '',
 			tags: data.tags || [],
 			thumbs: data.thumbs || [],
+			isAnonymous: !!data.isAnonymous,
 			modified: !!((data.title && data.title.length) || (data.body && data.body.length)),
 			isMain: true,
 		};
@@ -277,6 +278,7 @@ define('composer', [
 				toPid: data.toPid,
 				title: data.title,
 				body: translated,
+				isAnonymous: !!data.isAnonymous,
 				modified: !!(translated && translated.length),
 				isMain: false,
 			});
@@ -396,12 +398,34 @@ define('composer', [
 			composer.minimize(post_uuid);
 		});
 		
+		postContainer.find('[component="composer/isAnonymous"]').on('change', function () {
+			composer.posts[post_uuid].isAnonymous = $(this).is(':checked');
+		});
+
 		postContainer.find('[data-action="anonymous"]').on('click', function (e) {
 			e.preventDefault();
 			const btn = $(this);
 			const isAnonymous = !composer.posts[post_uuid].isAnonymous;
+			
 			// Toggle the state
 			composer.posts[post_uuid].isAnonymous = isAnonymous;
+			
+			// Update button styling
+			if (isAnonymous) {
+				btn.addClass('btn-primary text-white').removeClass('btn-link text-body');
+			} else {
+				btn.removeClass('btn-primary text-white').addClass('btn-link text-body');
+			}
+		});
+
+		postContainer.find('[data-action="anonymous"]').on('click', function (e) {
+			e.preventDefault();
+			const btn = $(this);
+			const isAnonymous = !composer.posts[post_uuid].isAnonymous;
+			
+			// Toggle the state
+			composer.posts[post_uuid].isAnonymous = isAnonymous;
+			
 			// Update button styling
 			if (isAnonymous) {
 				btn.addClass('btn-primary text-white').removeClass('btn-link text-body');
@@ -490,6 +514,8 @@ define('composer', [
 			'composer:showHelpTab': config['composer:showHelpTab'],
 			isTopic: isTopic,
 			isEditing: isEditing,
+			showAnonymousToggle: app.user.uid > 0 && !isEditing,
+			isAnonymous: !!postData.isAnonymous,
 			canSchedule: !!(isMain && privileges &&
 				((privileges['topics:schedule'] && !isEditing) || (isScheduled && privileges.view_scheduled))),
 			canUploadImage: app.user.privileges['upload:post:image'] && (config.maximumFileSize > 0 || app.user.isAdmin),
@@ -688,6 +714,8 @@ define('composer', [
 		var thumbEl = postContainer.find('input#topic-thumb-url');
 		var onComposeRoute = postData.hasOwnProperty('template') && postData.template.compose === true;
 		const submitBtn = postContainer.find('.composer-submit');
+		const anonymousEl = postContainer.find('[component="composer/isAnonymous"]');
+		const isAnonymous = anonymousEl.length ? anonymousEl.is(':checked') : !!postData.isAnonymous;
 
 		titleEl.val(titleEl.val().trim());
 		bodyEl.val(utils.rtrim(bodyEl.val()));
@@ -754,7 +782,7 @@ define('composer', [
 				tags: tags.getTags(post_uuid),
 				thumbs: postData.thumbs || [],
 				timestamp: scheduler.getTimestamp(),
-				isAnonymous: postData.isAnonymous || false,
+				isAnonymous: isAnonymous,
 			};
 		} else if (action === 'posts.reply') {
 			route = `/topics/${postData.tid}`;
@@ -764,7 +792,7 @@ define('composer', [
 				handle: handleEl ? handleEl.val() : undefined,
 				content: bodyEl.val(),
 				toPid: postData.toPid,
-				isAnonymous: postData.isAnonymous || false,
+				isAnonymous: isAnonymous,
 			};
 		} else if (action === 'posts.edit') {
 			method = 'put';
