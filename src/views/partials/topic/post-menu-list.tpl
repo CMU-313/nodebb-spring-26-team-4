@@ -95,6 +95,9 @@
 
 	{{{ end }}}
 
+	<!-- Endorse button: shown when the user has the global 'posts:endorse' privilege (display_endorse_tools).
+	     Toggles between endorse/unendorse icons and text based on the current posts.endorsed state.
+	     data-endorsed attribute is read by postTools.js toggleEndorse() to determine which API call to make. -->
 	{{{ if posts.display_endorse_tools }}}
 	<li>
 		<a class="dropdown-item rounded-1 d-flex align-items-center gap-2" component="post/endorse" role="menuitem" href="#" data-endorsed="{posts.endorsed}">

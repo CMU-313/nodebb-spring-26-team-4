@@ -175,7 +175,7 @@ module.exports = function (Topics) {
 				post.display_edit_tools = topicPrivileges.isAdminOrMod || (post.selfPost && topicPrivileges['posts:edit']);
 				post.display_delete_tools = topicPrivileges.isAdminOrMod || (post.selfPost && topicPrivileges['posts:delete']);
 				post.display_moderator_tools = post.display_edit_tools || post.display_delete_tools;
-				post.display_endorse_tools = topicPrivileges['posts:endorse'];
+				post.display_endorse_tools = topicPrivileges['posts:endorse']; // sourced from global privilege check in privsTopics.get()
 				post.display_move_tools = topicPrivileges.isAdminOrMod && post.index !== 0;
 				post.display_post_menu = topicPrivileges.isAdminOrMod ||
 					(post.selfPost && !topicData.locked && !post.deleted) ||

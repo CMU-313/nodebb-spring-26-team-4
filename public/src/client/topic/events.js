@@ -249,6 +249,8 @@ define('forum/topic/events', [
 		el.find('[component="post/bookmark/off"]').toggleClass('hidden', data.isBookmarked);
 	}
 
+	// Real-time handler for 'event:post_endorsed' websocket events.
+	// Updates the post's endorsed CSS class and indicator badge without requiring a page reload.
 	function onPostEndorsed(data) {
 		if (!data || !data.pid) {
 			return;

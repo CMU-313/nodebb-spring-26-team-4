@@ -35,7 +35,7 @@ privsTopics.get = async function (tid, uid) {
 			uid: uid,
 			tools: [],
 		}),
-		privsGlobal.can('posts:endorse', uid),
+		privsGlobal.can('posts:endorse', uid), // endorse is a global (not category-level) privilege
 	]);
 	const privData = _.zipObject(privs, userPrivileges);
 	const isOwner = uid > 0 && uid === topicData.uid;

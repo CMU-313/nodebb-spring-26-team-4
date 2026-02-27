@@ -163,6 +163,7 @@ Posts.unbookmark = async (req, res) => {
 	helpers.formatApiResponse(200, res);
 };
 
+// Endorse/unendorse controller handlers — delegate to api.posts and return the updated endorsed state
 Posts.endorse = async (req, res) => {
 	const result = await api.posts.endorse(req, { pid: req.params.pid });
 	helpers.formatApiResponse(200, res, result);

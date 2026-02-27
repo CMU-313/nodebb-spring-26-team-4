@@ -7,7 +7,7 @@ const utils = require('../utils');
 const intFields = [
 	'uid', 'pid', 'tid', 'deleted', 'timestamp',
 	'upvotes', 'downvotes', 'deleterUid', 'edited',
-	'replies', 'bookmarks', 'announces', 'endorsed',
+	'replies', 'bookmarks', 'announces', 'endorsed', // 'endorsed' (0 or 1) tracks whether a post has been endorsed by a privileged user
 	'isAnonymous', 'realUid', 'anonymousAliasId',
 ];
 

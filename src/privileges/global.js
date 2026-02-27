@@ -34,6 +34,7 @@ const _privilegeMap = new Map([
 	['ban', { label: '[[admin/manage/privileges:ban]]', type: 'moderation' }],
 	['mute', { label: '[[admin/manage/privileges:mute]]', type: 'moderation' }],
 	['view:users:info', { label: '[[admin/manage/privileges:view-users-info]]', type: 'moderation' }],
+	// Endorse privilege: allows users to endorse/unendorse posts site-wide. Visible in admin panel under Moderation tab.
 	['posts:endorse', { label: '[[admin/manage/privileges:endorse-posts]]', type: 'moderation' }],
 ]);
 

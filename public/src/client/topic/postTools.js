@@ -290,6 +290,7 @@ define('forum/topic/postTools', [
 			openChat($(this));
 		});
 
+		// Endorse button click handler — toggles endorsed state via PUT/DELETE /api/v3/posts/:pid/endorse
 		postContainer.on('click', '[component="post/endorse"]', function () {
 			toggleEndorse($(this));
 		});
@@ -435,6 +436,8 @@ define('forum/topic/postTools', [
 		postAction('purge', getData(button, 'data-pid'));
 	}
 
+	// Reads current endorsed state from the data-endorsed attribute and calls PUT (endorse) or DELETE (unendorse).
+	// The UI is updated via the 'event:post_endorsed' websocket event handled in events.js.
 	async function toggleEndorse(button) {
 		const pid = getData(button, 'data-pid');
 		const endorseBtn = button.closest('[component="post/endorse"]');
