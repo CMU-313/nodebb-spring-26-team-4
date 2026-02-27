@@ -68,17 +68,23 @@ Your reply will appear as authored by "Anonymous" with full standard functionali
 #### Test File Location
 
 [`test/posts/anonymous.js`](test/posts/anonymous.js)
+[`test/posts.js`](test/posts.js)
 
 Run the tests with:
 ```bash
 npm test test/posts/anonymous.js
 ```
+AND
+
+```bash
+npm test test/posts.js
+```
 
 #### What Is Being Tested
 
-The test file covers all six exported functions in [`src/posts/anonymous.js`](src/posts/anonymous.js) with 31 total test cases:
+The automated tests cover both helper-level behavior and integration behavior for anonymous posting.
 
-Function: What Is Tested
+Unit/Helper Tests (`test/posts/anonymous.js`)
 
 `getAnonymousUserData()`: Returns a correct, consistently structured anonymous user object; each call produces a new instance
 `isAnonymousPost()`: Returns `true` only when `isAnonymous === 1` (strict integer check); handles `null`, `undefined`, and other falsy/truthy values gracefully
@@ -87,36 +93,17 @@ Function: What Is Tested
 `getStatsUid()`: Returns `realUid` for anonymous posts and `uid` for normal posts, ensuring statistics are attributed to the correct user
 `getRealAuthorUid()`: Returns `realUid` when present, falls back to a `fallbackUid` otherwise; handles edge cases like `realUid = 0`
 
-#### Why the Tests Are Sufficient
+Integration Tests (`test/posts.js`, `describe('anonymous posting', ...)`)
+
+Anonymous post creation metadata: Confirms anonymous topics/replies are stored with `isAnonymous`, display `uid = 0`, internal `realUid`, and `anonymousAliasId`
+Stable identity mapping: Confirms same user in same thread keeps one alias ID and different users in same thread receive different alias IDs
+Thread-level display behavior: Confirms topic payloads expose generated anonymous alias display names while preserving generic anonymous profile fields
+Summary/single-post display behavior: Confirms `apiPosts.get` and `apiPosts.getSummary` display plain `Anonymous` and do not expose `realUid`
+
+### Why the Tests Are Sufficient
 
 - **Complete function coverage:** Every exported function has dedicated tests covering both the happy path and edge cases
 - **Branch coverage:** Every conditional is tested in both its true and false states, including type coercion edge cases (e.g., string `'1'` vs integer `1`)
 - **Data integrity:** Tests verify that `realUid` is preserved throughout the post lifecycle, which is critical for moderation and ActivityPub federation
 - **Backward compatibility:** Tests confirm that non-anonymous posts are unaffected by the feature
 - **Scope:** The module consists entirely of pure data-transformation functions with no direct database calls, so unit tests at this level provide complete coverage of the module's logic. Database integration and UI behavior are covered by NodeBB's existing broader test suite.
-
-
-
-## 3. Instructor-endorsed answers
-
-This feature allows instructors, or anyone with the endorse privilege, to endorse certain posts. Under the endorsed posts, a message will be displayed in green, to denote that the post is endorsed.
-
-### How to use this feature
-
-If you have the endorse privilege, in the post dropdown menu, you should see the "endorse post" button pop up. Click it to endorse a post. If the post is already endorsed, the button will become "unendorse post" so that you can cancel your endorsement. The post dropdown menu is located at the 3 dots at the bottom right corner of every post.
-
-### Testing Guide
-
-Users with the endorse privilege can repeat the steps above to ensure that this feature is working properly. After clicking the endorse button, if the green message "The post is endorsed by an instructor" appears under the post content, then the endorsement is successful. Clicking "unendorse post" would make the message disappear.
-
-### Automated Tests
-
-The automated tests for this feature are all located in [`test/posts.js`](test/posts.js). You can run them by running the command
-```bash
-npm run test test/posts.js
-```
-in the terminal.
-
-The tests comprehensively test that every post is associated with the endorse field, and that the functions reading the fields, like loadPostTools() and functions modifying the field, like the API calls, are working correctly. Th  tests also checks the privilege system to eusure that only users with the privilege can endorse, and that the privilege can be granted like all other global privileges.
-
-The tests should be comprehensive because they check all the intended and unintended usages of the functions, and verify that they are all handled properly. Almost all lines involved in implementing this functionality has been checked by the tests. This high coverage ensures that all code has been tested.

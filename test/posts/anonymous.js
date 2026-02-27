@@ -11,6 +11,7 @@ describe('Anonymous Posts', () => {
 			assert.strictEqual(anonUser.uid, 0);
 			assert.strictEqual(anonUser.username, 'Anonymous');
 			assert.strictEqual(anonUser.userslug, '');
+			assert.strictEqual(anonUser.picture, '');
 			assert.strictEqual(anonUser['icon:text'], 'A');
 			assert.strictEqual(anonUser['icon:bgColor'], '#999');
 			assert.strictEqual(anonUser.displayname, 'Anonymous');
@@ -59,6 +60,7 @@ describe('Anonymous Posts', () => {
 
 		it('should return true only when isAnonymous is exactly 1', () => {
 			assert.strictEqual(anonymous.isAnonymousPost({ isAnonymous: 1 }), true);
+			assert.strictEqual(anonymous.isAnonymousPost({ isAnonymous: '1' }), true);
 			assert.strictEqual(anonymous.isAnonymousPost({ isAnonymous: true }), false);
 			assert.strictEqual(anonymous.isAnonymousPost({ isAnonymous: 2 }), false);
 		});
@@ -151,8 +153,7 @@ describe('Anonymous Posts', () => {
 			assert.strictEqual(post.realUid, 456);
 		});
 
-		/*
-		it('should set realUid to null if it does not exist', () => {
+		it('should not add realUid when it does not exist', () => {
 			const post = {
 				isAnonymous: 1,
 				uid: 0,
@@ -161,9 +162,8 @@ describe('Anonymous Posts', () => {
 
 			anonymous.overrideUserDisplay(post);
 
-			assert.strictEqual(post.realUid, null);
+			assert.strictEqual(post.realUid, undefined);
 		});
-		*/
 
 		it('should set all anonymous user properties', () => {
 			const post = {
@@ -175,10 +175,14 @@ describe('Anonymous Posts', () => {
 
 			assert.strictEqual(post.user.uid, 0);
 			assert.strictEqual(post.user.username, 'Anonymous');
+			assert.strictEqual(post.user.picture, '');
 			assert.strictEqual(post.user['icon:text'], 'A');
 			assert.strictEqual(post.user['icon:bgColor'], '#999');
 			assert.strictEqual(post.user.banned, 0);
 			assert.strictEqual(post.user.status, 'offline');
+			assert.deepStrictEqual(post.user.custom_profile_info, []);
+			assert.deepStrictEqual(post.user.selectedGroups, []);
+			assert.strictEqual(post.user.signature, '');
 		});
 	});
 
