@@ -62,17 +62,23 @@ Your reply will appear as authored by "Anonymous" with full standard functionali
 ### Test File Location
 
 [`test/posts/anonymous.js`](test/posts/anonymous.js)
+[`test/posts.js`](test/posts.js)
 
 Run the tests with:
 ```bash
 npm test test/posts/anonymous.js
 ```
+AND
+
+```bash
+npm test test/posts.js
+```
 
 ### What Is Being Tested
 
-The test file covers all six exported functions in [`src/posts/anonymous.js`](src/posts/anonymous.js) with 31 total test cases:
+The automated tests cover both helper-level behavior and integration behavior for anonymous posting.
 
-Function: What Is Tested
+Unit/Helper Tests (`test/posts/anonymous.js`)
 
 `getAnonymousUserData()`: Returns a correct, consistently structured anonymous user object; each call produces a new instance
 `isAnonymousPost()`: Returns `true` only when `isAnonymous === 1` (strict integer check); handles `null`, `undefined`, and other falsy/truthy values gracefully
@@ -80,6 +86,13 @@ Function: What Is Tested
 `overrideUserDisplay()`: Overrides display data for anonymous posts only; leaves non-anonymous posts untouched; preserves `realUid` for moderation
 `getStatsUid()`: Returns `realUid` for anonymous posts and `uid` for normal posts, ensuring statistics are attributed to the correct user
 `getRealAuthorUid()`: Returns `realUid` when present, falls back to a `fallbackUid` otherwise; handles edge cases like `realUid = 0`
+
+Integration Tests (`test/posts.js`, `describe('anonymous posting', ...)`)
+
+Anonymous post creation metadata: Confirms anonymous topics/replies are stored with `isAnonymous`, display `uid = 0`, internal `realUid`, and `anonymousAliasId`
+Stable identity mapping: Confirms same user in same thread keeps one alias ID and different users in same thread receive different alias IDs
+Thread-level display behavior: Confirms topic payloads expose generated anonymous alias display names while preserving generic anonymous profile fields
+Summary/single-post display behavior: Confirms `apiPosts.get` and `apiPosts.getSummary` display plain `Anonymous` and do not expose `realUid`
 
 ### Why the Tests Are Sufficient
 
