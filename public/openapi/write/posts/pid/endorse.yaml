@@ -1,0 +1,66 @@
+put:
+  tags:
+    - posts
+  summary: endorse a post
+  description: This operation endorses a post. Requires the `posts:endorse` global privilege.
+  parameters:
+    - in: path
+      name: pid
+      schema:
+        type: string
+      required: true
+      description: a valid post id
+      example: 2
+  responses:
+    '200':
+      description: Post successfully endorsed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: ../../../components/schemas/Status.yaml#/Status
+              response:
+                type: object
+                properties:
+                  pid:
+                    type: number
+                    description: A post identifier
+                  endorsed:
+                    type: number
+                    description: Endorsement state (1 for endorsed)
+                    example: 1
+delete:
+  tags:
+    - posts
+  summary: unendorse a post
+  description: This operation removes an endorsement from a post. Requires the `posts:endorse` global privilege.
+  parameters:
+    - in: path
+      name: pid
+      schema:
+        type: string
+      required: true
+      description: a valid post id
+      example: 2
+  responses:
+    '200':
+      description: Post successfully unendorsed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: ../../../components/schemas/Status.yaml#/Status
+              response:
+                type: object
+                properties:
+                  pid:
+                    type: number
+                    description: A post identifier
+                  endorsed:
+                    type: number
+                    description: Endorsement state (0 for not endorsed)
+                    example: 0
