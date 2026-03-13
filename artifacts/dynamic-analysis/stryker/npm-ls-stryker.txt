@@ -1,0 +1,3 @@
+nodebb@4.8.0 /home/node/.devcontainer/nodebb-spring-26-team-4
+└── @stryker-mutator/core@9.6.0
+

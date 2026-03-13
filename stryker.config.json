@@ -1,0 +1,32 @@
+{
+    "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "testRunner": "command",
+    "commandRunner": {
+        "command": "npm run dynamic:stryker:test"
+    },
+    "mutate": [
+        "src/pagination.js"
+    ],
+    "ignorePatterns": [
+        "/artifacts",
+        "/build",
+        "/coverage",
+        "/jshint-output.txt",
+        "/logs"
+    ],
+    "reporters": [
+        "clear-text",
+        "progress",
+        "html",
+        "json"
+    ],
+    "htmlReporter": {
+        "fileName": "artifacts/dynamic-analysis/stryker/mutation-report.html"
+    },
+    "jsonReporter": {
+        "fileName": "artifacts/dynamic-analysis/stryker/mutation-report.json"
+    },
+    "clearTextReporter": {
+        "allowColor": false
+    }
+}
