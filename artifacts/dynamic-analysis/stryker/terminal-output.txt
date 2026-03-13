@@ -1,0 +1,192 @@
+
+> nodebb@4.8.0 dynamic:stryker
+> stryker run
+
+01:58:02 (8251) INFO ProjectReader Found 1 of 5832 file(s) to be mutated.
+01:58:02 (8251) INFO Instrumenter Instrumented 1 source file(s) with 137 mutant(s)
+01:58:02 (8251) INFO ConcurrencyTokenProvider Creating 11 test runner process(es).
+01:58:03 (8251) INFO BroadcastReporter Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+01:58:03 (8251) INFO DryRunExecutor Starting initial test run (command test runner with "perTest" coverage analysis). This may take a while.
+01:58:03 (8251) INFO DryRunExecutor Initial test run succeeded. Ran 1 tests in 0 seconds (net 168 ms, overhead 1 ms).
+
+All tests
+  ✓ All tests (killed 103)
+
+[Survived] ConditionalExpression
+src/pagination.js:11:29
+-   			prev: { page: 1, active: currentPage > 1 },
++   			prev: { page: 1, active: false },
+
+[Survived] ConditionalExpression
+src/pagination.js:12:29
+-   			next: { page: 1, active: currentPage < pageCount },
++   			next: { page: 1, active: false },
+
+[Survived] ConditionalExpression
+src/pagination.js:13:30
+-   			first: { page: 1, active: currentPage === 1 },
++   			first: { page: 1, active: true },
+
+[Survived] ConditionalExpression
+src/pagination.js:14:29
+-   			last: { page: 1, active: currentPage === pageCount },
++   			last: { page: 1, active: true },
+
+[Survived] EqualityOperator
+src/pagination.js:29:6
+-   	if (startPage > pageCount - 5) {
++   	if (startPage >= pageCount - 5) {
+
+[Survived] ConditionalExpression
+src/pagination.js:29:6
+-   	if (startPage > pageCount - 5) {
++   	if (false) {
+
+[Survived] ArithmeticOperator
+src/pagination.js:29:18
+-   	if (startPage > pageCount - 5) {
++   	if (startPage > pageCount + 5) {
+
+[Survived] BlockStatement
+src/pagination.js:29:33
+-   	if (startPage > pageCount - 5) {
+-   		startPage -= 2 - (pageCount - currentPage);
+-   	}
++   	if (startPage > pageCount - 5) {}
+
+[Survived] AssignmentOperator
+src/pagination.js:30:3
+-   		startPage -= 2 - (pageCount - currentPage);
++   		startPage += 2 - (pageCount - currentPage);
+
+[Survived] ArithmeticOperator
+src/pagination.js:30:16
+-   		startPage -= 2 - (pageCount - currentPage);
++   		startPage -= 2 + (pageCount - currentPage);
+
+[Survived] ArithmeticOperator
+src/pagination.js:30:21
+-   		startPage -= 2 - (pageCount - currentPage);
++   		startPage -= 2 - (pageCount + currentPage);
+
+[Survived] EqualityOperator
+src/pagination.js:36:51
+-   	pagesToShow = _.uniq(pagesToShow).filter(page => page > 0 && page <= pageCount).sort((a, b) => a - b);
++   	pagesToShow = _.uniq(pagesToShow).filter(page => page >= 0 && page <= pageCount).sort((a, b) => a - b);
+
+[Survived] ConditionalExpression
+src/pagination.js:36:51
+-   	pagesToShow = _.uniq(pagesToShow).filter(page => page > 0 && page <= pageCount).sort((a, b) => a - b);
++   	pagesToShow = _.uniq(pagesToShow).filter(page => true && page <= pageCount).sort((a, b) => a - b);
+
+[Survived] ConditionalExpression
+src/pagination.js:44:32
+-   		return { page: page, active: page === currentPage, qs: qs.stringify(queryObj) };
++   		return { page: page, active: true, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:44:32
+-   		return { page: page, active: page === currentPage, qs: qs.stringify(queryObj) };
++   		return { page: page, active: false, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:44:32
+-   		return { page: page, active: page === currentPage, qs: qs.stringify(queryObj) };
++   		return { page: page, active: page !== currentPage, qs: qs.stringify(queryObj) };
+
+[Survived] BooleanLiteral
+src/pagination.js:50:49
+-   			pages.splice(i, 0, { page: prevPage, active: false, qs: qs.stringify({ ...queryObj, page: prevPage }) });
++   			pages.splice(i, 0, { page: prevPage, active: true, qs: qs.stringify({ ...queryObj, page: prevPage }) });
+
+[Survived] ConditionalExpression
+src/pagination.js:58:40
+-   	data.prev = { page: previous, active: currentPage > 1, qs: qs.stringify(queryObj) };
++   	data.prev = { page: previous, active: true, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:58:40
+-   	data.prev = { page: previous, active: currentPage > 1, qs: qs.stringify(queryObj) };
++   	data.prev = { page: previous, active: false, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:58:40
+-   	data.prev = { page: previous, active: currentPage > 1, qs: qs.stringify(queryObj) };
++   	data.prev = { page: previous, active: currentPage <= 1, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:58:40
+-   	data.prev = { page: previous, active: currentPage > 1, qs: qs.stringify(queryObj) };
++   	data.prev = { page: previous, active: currentPage >= 1, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:60:36
+-   	data.next = { page: next, active: currentPage < pageCount, qs: qs.stringify(queryObj) };
++   	data.next = { page: next, active: false, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:60:36
+-   	data.next = { page: next, active: currentPage < pageCount, qs: qs.stringify(queryObj) };
++   	data.next = { page: next, active: true, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:60:36
+-   	data.next = { page: next, active: currentPage < pageCount, qs: qs.stringify(queryObj) };
++   	data.next = { page: next, active: currentPage <= pageCount, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:60:36
+-   	data.next = { page: next, active: currentPage < pageCount, qs: qs.stringify(queryObj) };
++   	data.next = { page: next, active: currentPage >= pageCount, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:63:34
+-   	data.first = { page: 1, active: currentPage === 1, qs: qs.stringify(queryObj) };
++   	data.first = { page: 1, active: true, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:63:34
+-   	data.first = { page: 1, active: currentPage === 1, qs: qs.stringify(queryObj) };
++   	data.first = { page: 1, active: false, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:63:34
+-   	data.first = { page: 1, active: currentPage === 1, qs: qs.stringify(queryObj) };
++   	data.first = { page: 1, active: currentPage !== 1, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:65:41
+-   	data.last = { page: pageCount, active: currentPage === pageCount, qs: qs.stringify(queryObj) };
++   	data.last = { page: pageCount, active: true, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:65:41
+-   	data.last = { page: pageCount, active: currentPage === pageCount, qs: qs.stringify(queryObj) };
++   	data.last = { page: pageCount, active: false, qs: qs.stringify(queryObj) };
+
+[Survived] ConditionalExpression
+src/pagination.js:67:6
+-   	if (currentPage < pageCount) {
++   	if (true) {
+
+[Survived] EqualityOperator
+src/pagination.js:65:41
+-   	data.last = { page: pageCount, active: currentPage === pageCount, qs: qs.stringify(queryObj) };
++   	data.last = { page: pageCount, active: currentPage !== pageCount, qs: qs.stringify(queryObj) };
+
+[Survived] EqualityOperator
+src/pagination.js:67:6
+-   	if (currentPage < pageCount) {
++   	if (currentPage <= pageCount) {
+
+Ran 0.99 tests per mutant on average.
+---------------|------------------|----------|-----------|------------|----------|----------|
+               | % Mutation score |          |           |            |          |          |
+File           |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+---------------|--------|---------|----------|-----------|------------|----------|----------|
+All files      |  75.91 |   75.91 |      103 |         1 |         33 |        0 |        0 |
+ pagination.js |  75.91 |   75.91 |      103 |         1 |         33 |        0 |        0 |
+---------------|--------|---------|----------|-----------|------------|----------|----------|
+01:58:10 (8251) INFO JsonReporter Your report can be found at: file:///home/node/.devcontainer/nodebb-spring-26-team-4/artifacts/dynamic-analysis/stryker/mutation-report.json
+01:58:10 (8251) INFO HtmlReporter Your report can be found at: file:///home/node/.devcontainer/nodebb-spring-26-team-4/artifacts/dynamic-analysis/stryker/mutation-report.html
+01:58:10 (8251) INFO MutationTestExecutor Done in 8 seconds.

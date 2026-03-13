@@ -1,0 +1,53 @@
+name: Dynamic Analysis - Stryker
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - tool/stryker-dynamic-analysis
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - '.github/workflows/stryker-dynamic-analysis.yml'
+      - 'install/package.json'
+      - 'stryker.config.json'
+      - 'test/dynamic-analysis/**'
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  stryker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare package manifest
+        run: cp install/package.json package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run Stryker dynamic analysis
+        run: |
+          mkdir -p artifacts/dynamic-analysis/stryker
+          npm run dynamic:stryker 2>&1 | perl -pe 's/\e\[[0-9;]*m//g' | tee artifacts/dynamic-analysis/stryker/ci-terminal-output.txt
+
+      - name: Upload Stryker artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-dynamic-analysis
+          path: artifacts/dynamic-analysis/stryker/
