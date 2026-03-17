@@ -69,4 +69,4 @@ Local run results:
 ## Notes
 
 - The first near-vanilla mutation run failed because Stryker attempted to copy generated symlinked build assets. The final configuration fixes that by excluding generated directories with `ignorePatterns`; I did not need to disable mutation scoring or switch to `dryRunOnly`.
-- This branch is intended for tool evaluation, not for replacing NodeBB's existing main test pipeline.
+- This document records the initial evaluation branch. The merged workflow and ongoing integration policy are documented in `docs/design/stryker-integration-design.md`.

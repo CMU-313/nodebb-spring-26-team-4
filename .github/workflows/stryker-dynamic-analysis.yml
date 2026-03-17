@@ -4,17 +4,14 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - tool/stryker-dynamic-analysis
+      - main
+      - master
+      - develop
   pull_request:
     branches:
       - main
       - master
       - develop
-    paths:
-      - '.github/workflows/stryker-dynamic-analysis.yml'
-      - 'install/package.json'
-      - 'stryker.config.json'
-      - 'test/dynamic-analysis/**'
 
 defaults:
   run:
@@ -35,16 +32,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Prepare package manifest
-        run: cp install/package.json package.json
-
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-
       - name: Run Stryker dynamic analysis
-        run: |
-          mkdir -p artifacts/dynamic-analysis/stryker
-          npm run dynamic:stryker 2>&1 | perl -pe 's/\e\[[0-9;]*m//g' | tee artifacts/dynamic-analysis/stryker/ci-terminal-output.txt
+        run: ./scripts/run-stryker-check.sh
 
       - name: Upload Stryker artifacts
         uses: actions/upload-artifact@v4
