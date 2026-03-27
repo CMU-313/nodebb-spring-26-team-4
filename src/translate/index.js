@@ -4,14 +4,14 @@
 
 const translatorApi = module.exports;
 
-translatorApi.translate = async function (postData) {
-//  Edit the translator URL below
-	const TRANSLATOR_API = 'http://localhost:5000';
-	try{
-		const response = await fetch(TRANSLATOR_API + '/?content=' + postData.content);
-		const data = await response.json();
-		return [data.is_english, data.translated_content];
-	} catch (e) {
-		return ['is_english', postData];
-	}
+translatorApi.translate = function (postData) {
+	return ['is_english',postData];
 };
+
+// translatorApi.translate = async function (postData) {
+//  Edit the translator URL below
+//  const TRANSLATOR_API = "TODO"
+//  const response = await fetch(TRANSLATOR_API+'/?content='+postData.content);
+//  const data = await response.json();
+//  return ['is_english','translated_content'];
+// };
