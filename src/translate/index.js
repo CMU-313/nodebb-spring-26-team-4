@@ -15,7 +15,7 @@ translatorApi.translate = async function (postData) {
 		return [true, postData.content];
 	}
 
-	const TRANSLATOR_API = 'http://17313-team06.s3d.cmu.edu:5000';
+	const TRANSLATOR_API = 'http://host.docker.internal:5000';
 	try{
 		const response = await fetch(TRANSLATOR_API + '/?content=' + postData.content);
 		const data = await response.json();

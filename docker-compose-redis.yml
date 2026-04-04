@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     ports:
       - '4567:4567' # comment this out if you don't want to expose NodeBB to the host, or change the first number to any port you want
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - nodebb-build:/usr/src/app/build
       - nodebb-uploads:/usr/src/app/public/uploads
