@@ -15,7 +15,6 @@ translatorApi.translate = async function (postData) {
 		return [true, postData.content];
 	}
 
-//  Edit the translator URL below
 	const TRANSLATOR_API = 'http://17313-team06.s3d.cmu.edu:5000';
 	try{
 		const response = await fetch(TRANSLATOR_API + '/?content=' + postData.content);
